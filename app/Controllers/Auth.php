@@ -36,7 +36,7 @@ class Auth extends BaseController
 
         if (!$validation->withRequest($this->request)->run()) {
             return redirect()->back()->withInput()
-                ->with('error', 'Username and password are required');
+                ->with('error', 'Username dan password wajib diisi');
         }
 
         $username = $this->request->getPost('username');
@@ -56,7 +56,7 @@ class Auth extends BaseController
         }
 
         return redirect()->back()
-            ->with('error', 'Invalid username or password');
+            ->with('error', 'Username atau password salah');
     }
 
     public function logout()

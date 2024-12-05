@@ -20,3 +20,5 @@
         </div>
     </div>
 </div>
+
+<script src="<?= base_url('templates/partials/sidebar.js') ?>"></script>

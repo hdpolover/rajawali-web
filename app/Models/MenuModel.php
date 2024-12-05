@@ -18,12 +18,14 @@ class MenuModel extends Model
         'title',
         'icon',
         'url',
-        'order_position'
+        'order_position',
+        'created_at',
+        'updated_at'
     ];
 
     protected $useTimestamps = true;
-    protected $createdField = 'created_at';
-    protected $updatedField = 'updated_at';
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
 
     protected $validationRules = [
         'title' => 'required|min_length[3]',
@@ -98,7 +100,36 @@ class MenuModel extends Model
     }
 
     /**
-     * Add menu item
+     * Retrieves breadcrumbs based on the current URL
+     */
+    public function getBreadcrumbs($currentUrl)
+    {
+        // Find the menu item matching the current URL
+        $menuItem = $this->where('url', $currentUrl)->first();
+
+        // If menu item not found, return an empty array
+        if (!$menuItem) {
+            return [];
+        }
+
+        // Initialize breadcrumbs array
+        $breadcrumbs = [];
+
+        // Traverse up the menu hierarchy
+        while ($menuItem) {
+            array_unshift($breadcrumbs, [
+                'title' => $menuItem->title,
+                'url'   => $menuItem->url ? site_url($menuItem->url) : '',
+            ]);
+
+            $menuItem = $menuItem->parent_id ? $this->find($menuItem->parent_id) : null;
+        }
+
+        return $breadcrumbs;
+    }
+
+    /**
+     * Adds a menu item
      */
     public function addMenuItem($data)
     {
@@ -106,7 +137,7 @@ class MenuModel extends Model
     }
 
     /**
-     * Update menu item
+     * Updates a menu item
      */
     public function updateMenuItem($id, $data)
     {
@@ -114,18 +145,19 @@ class MenuModel extends Model
     }
 
     /**
-     * Delete menu item and its children
+     * Deletes a menu item and its children
      */
     public function deleteMenuItem($id)
     {
         // First delete children
         $this->where('parent_id', $id)->delete();
+
         // Then delete parent
         return $this->delete($id);
     }
 
     /**
-     * Reorder menu items
+     * Reorders menu items
      */
     public function reorderMenuItems($items)
     {

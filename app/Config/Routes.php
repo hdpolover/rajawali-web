@@ -23,3 +23,8 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('dashboard', 'Dashboard::index');
     // Add other protected routes here
 });
+
+$routes->group('transactions', ['filter' => 'auth'], function($routes) {
+    $routes->get('sales', 'Transaction::sales');
+    $routes->get('incoming', 'Transaction::incoming');
+});
