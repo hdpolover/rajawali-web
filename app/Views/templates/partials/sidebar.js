@@ -1,4 +1,5 @@
 // public/js/templates/partials/sidebar.js
+
 document.addEventListener('DOMContentLoaded', function() {
     const submenus = document.querySelectorAll('.sidebar-item.has-sub');
     const currentPath = window.location.pathname;
@@ -31,6 +32,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     const submenu = submenuParent.querySelector('.submenu');
                     if (submenu) {
                         submenu.classList.add('active');
+                    }
+                }
+            } else {
+                link.classList.remove('active');
+                const submenuParent = link.closest('.sidebar-item.has-sub');
+                if (submenuParent) {
+                    submenuParent.classList.remove('active');
+                    const submenu = submenuParent.querySelector('.submenu');
+                    if (submenu) {
+                        submenu.classList.remove('active');
                     }
                 }
             }

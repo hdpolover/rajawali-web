@@ -20,7 +20,7 @@
                 <div id="auth-left">
                     <div class="d-flex flex-column justify-content-center h-100 py-5">
                         <div class="auth-logo mb-4">
-                            <a href="<?= site_url() ?>"><img src="<?= base_url('mazer/assets/compiled/svg/logo.svg') ?>" alt="Logo"></a>
+                            <a href="<?= site_url() ?>"><img src="<?= base_url('images/logo_rajawali.png') ?>" alt="Logo"></a>
                         </div>
 
                         <!-- <p class="auth-title">Selamat Datang Kembali.</p> -->

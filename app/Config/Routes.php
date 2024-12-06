@@ -28,3 +28,6 @@ $routes->group('transactions', ['filter' => 'auth'], function($routes) {
     $routes->get('sales', 'Transaction::sales');
     $routes->get('incoming', 'Transaction::incoming');
 });
+
+$routes->get('customers/search', 'Customer::search');
+$routes->get('mechanics/search', 'Mechanic::search');

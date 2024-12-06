@@ -4,6 +4,14 @@
 
 <!-- Basic Tables start -->
 <section class="section">
+
+    <div class="row mb-4">
+        <div class="col-12 text-end">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#saleTransactionModal">
+                <i class="bi bi-plus"></i> Transaksi Baru
+            </button>
+        </div>
+    </div>
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
@@ -261,20 +269,8 @@
 </section>
 <!-- Basic Tables end -->
 
-
-<!-- Add Sales Modal -->
-<div class="modal fade" id="addSalesModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Transaksi Baru</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Form will be added here -->
-            </div>
-        </div>
-    </div>
-</div>
+<!-- include modals -->
+<?= $this->include('pages/transactions/modals/sale_detail_modal'); ?>
+<?= $this->include('pages/transactions/modals/add_edit_sale_modal'); ?>
 
 <?= $this->endSection() ?>

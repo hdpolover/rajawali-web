@@ -7,33 +7,34 @@ if (!function_exists('renderMenu')) {
         $currentUrl = current_url();
         $html = '<ul class="menu">';
         
-        foreach ($items as $item) {
+        foreach ($items as $index => $item) {
+            $hasSubmenu = count($item->children) > 0;
             $isActive = strpos($currentUrl, site_url($item->url)) !== false;
+            $html .= '<li class="sidebar-item' . ($hasSubmenu ? ' has-sub' : '') . ($isActive ? ' active' : '') . '" data-menu-id="' . $index . '">
+                        <a href="' . site_url($item->url) . '" class="sidebar-link">
+                            <i class="' . $item->icon . '"></i>
+                            <span>' . $item->title . '</span>
+                        </a>';
             
-            if (count($item->children) > 0) {
-                $html .= '<li class="sidebar-item has-sub ' . ($isActive ? 'active' : '') . '">
-                            <a href="' . site_url($item->url) . '" class="sidebar-link">
-                                <i class="' . $item->icon . '"></i>
-                                <span>' . $item->title . '</span>
-                            </a>
-                            <ul class="submenu ' . ($isActive ? 'active' : '') . '">';
-                            
-                foreach ($item->children as $child) {
+            if ($hasSubmenu) {
+                $html .= '<ul class="submenu">';
+                
+                foreach ($item->children as $childIndex => $child) {
                     $isChildActive = strpos($currentUrl, site_url($child->url)) !== false;
-                    $html .= '<li class="submenu-item ' . ($isChildActive ? 'active' : '') . '">
+                    if ($isChildActive) {
+                        $isActive = true;
+                    }
+                    $html .= '<li class="submenu-item' . ($isChildActive ? ' active' : '') . '">
                                 <a href="' . site_url($child->url) . '" class="submenu-link">' . $child->title . '</a>
                             </li>';
                 }
-                $html .= '</ul></li>';
-            } else {
-                $html .= '<li class="sidebar-item ' . ($isActive ? 'active' : '') . '">
-                            <a href="' . site_url($item->url) . '" class="sidebar-link">
-                                <i class="' . $item->icon . '"></i>
-                                <span>' . $item->title . '</span>
-                            </a>
-                        </li>';
+                
+                $html .= '</ul>';
             }
+            
+            $html .= '</li>';
         }
+        
         $html .= '</ul>';
         return $html;
     }
