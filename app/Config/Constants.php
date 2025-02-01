@@ -92,3 +92,40 @@ define('EVENT_PRIORITY_NORMAL', 100);
  * @deprecated Use \CodeIgniter\Events\Events::PRIORITY_HIGH instead.
  */
 define('EVENT_PRIORITY_HIGH', 10);
+
+/**
+ * Storage URL domain
+ * 
+ * This is the domain where the uploaded files are stored.
+ */
+defined('STORAGE_URL_DOMAIN') || define('STORAGE_URL_DOMAIN', 'https://storage.bengkelrajawalimotor.com/uploads/');
+
+/**
+ * Storage URL
+ * 
+ * This is the URL where the uploaded files are stored.
+ */
+
+defined('STORAGE_URL') || define('STORAGE_URL', STORAGE_URL_DOMAIN);
+
+/**
+ * uploads path will be used to store uploaded files
+ * this is located on a different domain for storage
+ * 
+ */
+defined('UPLOADS_PATH') || define('UPLOADS_PATH', ROOTPATH . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR);
+
+/**
+ * spare part path
+ * `public/uploads/spare_parts/`
+ */
+defined('SPARE_PART_PHOTO_PATH') || define('SPARE_PART_PHOTO_PATH', UPLOADS_PATH . 'spare_parts' . DIRECTORY_SEPARATOR);
+
+/**
+ * spare part uri
+ * 
+ * used in `<img src="">`
+ * 
+ * `uploads/spare_parts/`
+ */
+defined('SPARE_PART_URI') || define('SPARE_PART_URI', 'uploads' . DIRECTORY_SEPARATOR . 'spare_parts' . DIRECTORY_SEPARATOR);

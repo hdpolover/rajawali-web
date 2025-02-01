@@ -53,12 +53,12 @@ class AdminModel extends Model
     }
 
     // Authentication methods
-    public function authenticate($username, $password)
+    public function authenticate($email, $password)
     {
         // Join with roles table to get role name
         $admin = $this->select('admins.*, roles.name as role_name')
             ->join('roles', 'roles.id = admins.role_id')
-            ->where('admins.username', $username)
+            ->where('admins.email', $email)
             ->where('admins.active', 1)
             ->first();
 

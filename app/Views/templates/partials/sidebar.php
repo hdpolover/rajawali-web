@@ -13,14 +13,69 @@
             </div>
         </div>
         <div class="sidebar-menu">
-            <?php
-            $roleId = session()->get('role_id');
-            $menuModel = new \App\Models\MenuModel();
-            $menuItems = $menuModel->getMenuByRole($roleId);
-            echo renderMenu($menuItems);
-            ?>
+            <ul class="menu">
+                <?php foreach ($menu_items as $index => $menu) : ?>
+                    <?php
+                    $hasSubmenu = count($menu->children) > 0;
+                    ?>
+
+                    <?php if ($hasSubmenu) : ?>
+                        <li class="sidebar-item has-sub">
+                            <a href="<?= site_url($menu->url) ?>" class="sidebar-link">
+                                <i class="<?= $menu->icon ?>"></i>
+                                <span><?= $menu->title ?></span>
+                            </a>
+                            <ul class="submenu">
+                                <?php foreach ($menu->children as $child) : ?>
+                                    <li class="submenu-item">
+                                        <a href="<?= site_url($child->url) ?>" class="submenu-link"><?= $child->title ?></a>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </li>
+                    <?php else : ?>
+                        <li class="sidebar-item">
+                            <a href="<?= site_url($menu->url) ?>" class="sidebar-link">
+                                <i class="<?= $menu->icon ?>"></i>
+                                <span><?= $menu->title ?></span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+
+                <?php endforeach; ?>
+            </ul>
         </div>
     </div>
 </div>
 
-<script src="<?= base_url('templates/partials/sidebar.js') ?>"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // set active class to the current menu
+        const currentUrl = '<?= current_url() ?>';
+        const sidebarItems = document.querySelectorAll('.sidebar-item');
+
+        // if sidebarItems does not have submenu and currentUrl is equal to the sidebar item URL, add active class
+        sidebarItems.forEach(sidebarItem => {
+            const sidebarLink = sidebarItem.querySelector('.sidebar-link');
+            const sidebarLinkUrl = sidebarLink.getAttribute('href');
+
+            // check if sidebar item has submenu
+            const hasSubmenu = sidebarItem.classList.contains('has-sub');
+            if (hasSubmenu) {
+                const submenuItems = sidebarItem.querySelectorAll('.submenu-item .submenu-link');
+                submenuItems.forEach(submenuItem => {
+                    const submenuLinkUrl = submenuItem.getAttribute('href');
+                    if (currentUrl === submenuLinkUrl) {
+                        sidebarItem.classList.add('active');
+                        submenuItem.parentElement.classList.add('active');
+                    }
+                });
+            } else {
+                if (currentUrl === sidebarLinkUrl) {
+                    sidebarItem.classList.add('active');
+                }
+            }
+        });
+
+    });
+</script>

@@ -9,11 +9,8 @@ class Dashboard extends BaseController
     {
         $data = [
             'title'       => 'Dashboard',
-            'username'    => $this->session->get('username'),
-            'role'        => $this->session->get('role'),
-            'breadcrumbs' => $this->getBreadcrumbs(),
         ];
 
-        return view('pages/dashboard/dashboard', $data);
+        return $this->render('pages/dashboard/dashboard', $data);
     }
 }

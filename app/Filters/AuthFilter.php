@@ -13,7 +13,7 @@ class AuthFilter implements FilterInterface
     {
         if (!session()->get('logged_in')) {
             return redirect()->to('login')
-                ->with('error', 'Please login to access this page');
+                ->with('error', 'Silakan login terlebih dahulu');
         }
     }
 

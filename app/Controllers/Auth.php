@@ -8,12 +8,10 @@ use App\Models\AdminModel;
 class Auth extends BaseController
 {
     protected $adminModel;
-    protected $session;
 
     public function __construct()
     {
         $this->adminModel = new AdminModel();
-        $this->session = session();
     }
 
     public function index()
@@ -30,23 +28,24 @@ class Auth extends BaseController
     {
         $validation = \Config\Services::validation();
         $validation->setRules([
-            'username' => 'required',
+            'email' => 'required',
             'password' => 'required'
         ]);
 
         if (!$validation->withRequest($this->request)->run()) {
             return redirect()->back()->withInput()
-                ->with('error', 'Username dan password wajib diisi');
+                ->with('error', 'Email dan password wajib diisi');
         }
 
-        $username = $this->request->getPost('username');
+        $email = $this->request->getPost('email');
         $password = $this->request->getPost('password');
 
-        $admin = $this->adminModel->authenticate($username, $password);
+        $admin = $this->adminModel->authenticate($email, $password);
 
         if ($admin) {
             $this->session->set([
-                'user_id' => $admin->id,
+                'admin_id' => $admin->id,
+                'email' => $admin->email,
                 'username' => $admin->username,
                 'role_id' => $admin->role_id,
                 'role' => $admin->role_name,
@@ -56,7 +55,7 @@ class Auth extends BaseController
         }
 
         return redirect()->back()
-            ->with('error', 'Username atau password salah');
+            ->with('error', 'Email atau password salah');
     }
 
     public function logout()

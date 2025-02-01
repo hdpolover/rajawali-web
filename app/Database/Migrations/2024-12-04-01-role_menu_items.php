@@ -25,6 +25,15 @@ class RoleMenuItems extends Migration
                 'type' => 'DATETIME',
                 'null' => true
             ],
+            'updated_at' => [
+                'type' => 'DATETIME',
+                'null' => true
+            ],
+            // deleted at
+            'deleted_at' => [
+                'type' => 'DATETIME',
+                'null' => true
+            ]
         ]);
         $this->forge->addPrimaryKey(['role_id', 'menu_item_id']);
         $this->forge->addForeignKey('role_id', 'roles', 'id', 'CASCADE', 'CASCADE');

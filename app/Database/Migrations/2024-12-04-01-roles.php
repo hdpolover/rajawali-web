@@ -27,6 +27,11 @@ class Roles extends Migration
                 'type' => 'DATETIME',
                 'null' => true,
             ],
+            // deleted_at
+            'deleted_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('roles');

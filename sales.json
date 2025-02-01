@@ -1,0 +1,49 @@
+{
+    "sales": [
+        {
+            "sale_id": 1,
+            "customer_id": 1,
+            "motorcycle_id": 1,
+            "total": 1000,
+            "spare_part_sale_id": 1,
+            "service_sale_id": 1,
+            "description": "Sale 1",
+            "spare_part_sales": [
+                {
+                    "id": 1,
+                    "sale_id": 1,
+                    "total": 500,
+                    "description": "Spare part sale 1",
+                    "spare_part_sale_details": [
+                        {
+                            "id": 1,
+                            "spare_part_sale_id": 1,
+                            "spare_part_id": 1,
+                            "price": 100,
+                            "quantity": 5,
+                            "subtotal": 500,
+                            "description": "Spare part sale detail 1"
+                        }
+                    ]
+                }
+            ],
+            "service_sales": [
+                {
+                    "id": 1,
+                    "sale_id": 1,
+                    "total": 500,
+                    "description": "Service sale 1",
+                    "service_sale_details": [
+                        {
+                            "id": 1,
+                            "mechanic_id": 1,
+                            "service_id": 1,
+                            "price": 500,
+                            "description": "Service sale detail 1"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

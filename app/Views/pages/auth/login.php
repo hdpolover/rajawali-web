@@ -18,14 +18,14 @@
         <div class="row h-100">
             <div class="col-lg-5 col-12">
                 <div id="auth-left">
-                    <div class="d-flex flex-column justify-content-center h-100 py-5">
-                        <div class="auth-logo mb-4">
-                            <a href="<?= site_url() ?>"><img src="<?= base_url('images/logo_rajawali.png') ?>" alt="Logo"></a>
+                    <div class="d-flex flex-column justify-content-center h-100 py-1">
+                        <div class="auth-logo mb-3">
+                            <a href="<?= site_url() ?>"><img src="<?= base_url('images/logo_rajawali.png') ?>" alt="logo" style="width: 150px; height: auto;"></a>
                         </div>
 
                         <!-- <p class="auth-title">Selamat Datang Kembali.</p> -->
                         <br>
-                        <p class="auth-subtitle mb-4" style="font-weight:bold; color:black;">Selamat Datang.</p>
+                        <p class="auth-subtitle mb-5" style="font-weight:bold; color:black;">Selamat Datang.</p>
 
                         <?php if (session()->getFlashdata('error')) : ?>
                             <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
@@ -40,17 +40,17 @@
 
                             <div class="form-group position-relative has-icon-left mb-4">
                                 <input type="text"
-                                    class="form-control form-control-xl <?= session()->getFlashdata('errors.username') ? 'is-invalid' : '' ?>"
-                                    name="username"
-                                    placeholder="Username"
-                                    value="<?= old('username') ?>"
+                                    class="form-control form-control-xl <?= session()->getFlashdata('errors.email') ? 'is-invalid' : '' ?>"
+                                    name="email"
+                                    placeholder="email"
+                                    value="<?= old('email') ?>"
                                     required>
                                 <div class="form-control-icon">
                                     <i class="bi bi-person"></i>
                                 </div>
-                                <?php if (session()->getFlashdata('errors.username')) : ?>
+                                <?php if (session()->getFlashdata('errors.email')) : ?>
                                     <div class="invalid-feedback">
-                                        <?= session()->getFlashdata('errors.username') ?>
+                                        <?= session()->getFlashdata('errors.email') ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -78,7 +78,7 @@
                                 </label>
                             </div>
 
-                            <button class="btn btn-primary btn-block btn-lg shadow-lg mt-5" type="submit" id="loginBtn">
+                            <button class="btn btn-primary btn-block btn-lg shadow-lg mt-2" type="submit" id="loginBtn">
                                 <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                                 Masuk
                             </button>

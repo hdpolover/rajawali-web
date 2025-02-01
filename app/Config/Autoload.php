@@ -90,5 +90,5 @@ class Autoload extends AutoloadConfig
      *
      * @var list<string>
      */
-    public $helpers = ['url', 'form', 'menu'];  // Add 'menu' to autoload helpers
+    public $helpers = ['url', 'form', 'menu', 'custom_helper'];  // Add 'menu' to autoload helpers
 }

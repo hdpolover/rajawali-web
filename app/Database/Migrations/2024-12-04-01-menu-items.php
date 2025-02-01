@@ -1,12 +1,10 @@
 <?php
 
-// app/Database/Migrations/2024-12-04-000002_MenuItems.php
-
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class MenuItems extends Migration
+class CreateMenuItemsTable extends Migration
 {
     public function up()
     {
@@ -49,6 +47,10 @@ class MenuItems extends Migration
                 'type' => 'DATETIME',
                 'null' => true
             ],
+            'deleted_at' => [
+                'type' => 'DATETIME',
+                'null' => true
+            ]
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->addForeignKey('parent_id', 'menu_items', 'id', 'CASCADE', 'CASCADE');
