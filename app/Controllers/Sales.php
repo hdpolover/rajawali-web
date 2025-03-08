@@ -12,6 +12,8 @@ use App\Models\ServiceSaleModel;
 use App\Models\SparePartSaleDetailModel;
 use App\Models\ServiceSaleDetailModel;
 use App\Models\SparePartDetailModel;
+use App\Models\SalePaymentModel;
+use App\Models\SalePaymentDetailModel;
 
 class Sales extends BaseController
 {
@@ -25,6 +27,8 @@ class Sales extends BaseController
     protected $sparePartSaleDetailModel;
     protected $serviceSaleDetailModel;
     protected $sparePartDetailModel;
+    protected $salePaymentModel;
+    protected $salePaymentDetailModel;
 
     public function __construct()
     {
@@ -48,6 +52,10 @@ class Sales extends BaseController
         $this->serviceSaleDetailModel = new ServiceSaleDetailModel();
         // Load the spare part detail model
         $this->sparePartDetailModel = new SparePartDetailModel();
+        // Load the sale payment model
+        $this->salePaymentModel = new SalePaymentModel();
+        // Load the sale payment detail model
+        $this->salePaymentDetailModel = new SalePaymentDetailModel();
     }
 
     public function index()
@@ -233,5 +241,446 @@ class Sales extends BaseController
         ];
 
         return $this->render('pages/transactions/sales/new', $data);
+    }
+
+    /**
+     * Update sale data
+     */
+    public function update()
+    {
+        // Get request data
+        $postData = $this->request->getPost();
+        
+        // Validate required data
+        if (!isset($postData['id']) || !is_numeric($postData['id'])) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'ID penjualan tidak valid'
+            ]);
+        }
+        
+        // Get sale data
+        $sale = $this->saleModel->find($postData['id']);
+        
+        if (!$sale) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Data penjualan tidak ditemukan'
+            ]);
+        }
+        
+        // Prepare update data
+        $updateData = [
+            'id' => $postData['id'],
+            'status' => $postData['status'],
+            'discount' => $postData['discount'],
+            'description' => $postData['description']
+        ];
+        
+        // Store old values for activity log
+        $oldSale = $this->saleModel->find($postData['id']);
+        
+        // Save sale updates
+        $this->saleModel->save($updateData);
+        
+        // Update payment status if there are payments
+        $payment = $this->salePaymentModel->where('sale_id', $postData['id'])->first();
+        
+        if ($payment) {
+            // Get all payment details
+            $paymentDetails = $this->salePaymentDetailModel->where('sale_payment_id', $payment->id)->findAll();
+            
+            if ($paymentDetails) {
+                foreach ($paymentDetails as $detail) {
+                    // Check if status is updated
+                    $newStatus = $postData['payment_status_' . $detail->id] ?? null;
+                    
+                    if ($newStatus && $newStatus !== $detail->status) {
+                        $this->salePaymentDetailModel->update($detail->id, [
+                            'status' => $newStatus
+                        ]);
+                    }
+                }
+            }
+        }
+        
+        // Add activity log
+        $logData = [
+            'admin_id' => session()->get('admin_id'),
+            'table_name' => 'sales',
+            'action_type' => 'edit',
+            'old_value' => json_encode($oldSale),
+            'new_value' => json_encode($updateData),
+        ];
+        
+        $this->activityLogModel->saveActivityLog($logData);
+        
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Data penjualan berhasil diperbarui'
+        ]);
+    }
+    
+    /**
+     * Add payment to sale
+     */
+    public function add_payment()
+    {
+        $postData = $this->request->getPost();
+        
+        // Validate required data
+        if (!isset($postData['sale_id']) || !is_numeric($postData['sale_id'])) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'ID penjualan tidak valid'
+            ]);
+        }
+        
+        if (!isset($postData['amount']) || !is_numeric($postData['amount']) || $postData['amount'] <= 0) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Jumlah pembayaran tidak valid'
+            ]);
+        }
+        
+        // Get sale data
+        $sale = $this->saleModel->find($postData['sale_id']);
+        
+        if (!$sale) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Data penjualan tidak ditemukan'
+            ]);
+        }
+        
+        // Check or create payment record for this sale
+        $payment = $this->salePaymentModel->where('sale_id', $postData['sale_id'])->first();
+        
+        if (!$payment) {
+            // Create new payment record
+            $this->salePaymentModel->save([
+                'sale_id' => $postData['sale_id'],
+                'total' => $postData['amount'],
+                'status' => 'pending'
+            ]);
+            
+            $paymentId = $this->salePaymentModel->getInsertID();
+        } else {
+            $paymentId = $payment->id;
+            
+            // Update the total
+            $this->salePaymentModel->update($paymentId, [
+                'total' => $payment->total + $postData['amount']
+            ]);
+        }
+        
+        // Make sure payment method is not empty
+        $paymentMethod = !empty($postData['payment_method']) ? $postData['payment_method'] : 'cash';
+
+        // Add payment detail
+        $paymentDetail = [
+            'sale_payment_id' => $paymentId,
+            'payment_method' => $paymentMethod,
+            'amount' => $postData['amount'],
+            'payment_date' => $postData['payment_date'],
+            'status' => $postData['status'],
+            'description' => !empty($postData['description']) ? $postData['description'] : '',
+            'proof' => 'default.jpg'
+        ];
+        
+        $this->salePaymentDetailModel->save($paymentDetail);
+        
+        // If status is completed, check if the total payment equals the sale total
+        if ($postData['status'] === 'completed') {
+            // Get all payment details
+            $paymentDetails = $this->salePaymentDetailModel
+                ->where('sale_payment_id', $paymentId)
+                ->where('status', 'completed')
+                ->findAll();
+            
+            $totalPaid = 0;
+            foreach ($paymentDetails as $detail) {
+                $totalPaid += $detail->amount;
+            }
+            
+            // Check if payment is complete
+            $saleTotal = $sale->total;
+            
+            if ($totalPaid >= $saleTotal) {
+                // Update sale status to completed
+                $this->saleModel->update($sale->id, [
+                    'status' => 'completed'
+                ]);
+                
+                // Update payment status to completed
+                $this->salePaymentModel->update($paymentId, [
+                    'status' => 'completed'
+                ]);
+            } else {
+                // Update sale status to process
+                $this->saleModel->update($sale->id, [
+                    'status' => 'process'
+                ]);
+            }
+        }
+        
+        // Add activity log
+        $logData = [
+            'admin_id' => session()->get('admin_id'),
+            'table_name' => 'sale_payment_details',
+            'action_type' => 'add',
+            'old_value' => null,
+            'new_value' => json_encode($paymentDetail),
+        ];
+        
+        $this->activityLogModel->saveActivityLog($logData);
+        
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Pembayaran berhasil ditambahkan'
+        ]);
+    }
+    
+    /**
+     * Delete payment
+     */
+    public function delete_payment()
+    {
+        $postData = $this->request->getPost();
+        
+        // Validate required data
+        if (!isset($postData['id']) || !is_numeric($postData['id'])) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'ID pembayaran tidak valid'
+            ]);
+        }
+        
+        // Get payment detail
+        $paymentDetail = $this->salePaymentDetailModel->find($postData['id']);
+        
+        if (!$paymentDetail) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Data pembayaran tidak ditemukan'
+            ]);
+        }
+        
+        // Get payment and sale
+        $payment = $this->salePaymentModel->find($paymentDetail->sale_payment_id);
+        
+        if (!$payment) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Data pembayaran utama tidak ditemukan'
+            ]);
+        }
+        
+        // Store old values for activity log
+        $oldPaymentDetail = $paymentDetail;
+        
+        // Delete payment detail
+        $this->salePaymentDetailModel->delete($postData['id']);
+        
+        // Update the total payment
+        $this->salePaymentModel->update($payment->id, [
+            'total' => $payment->total - $paymentDetail->amount
+        ]);
+        
+        // Get remaining payment details
+        $remainingPayments = $this->salePaymentDetailModel
+            ->where('sale_payment_id', $payment->id)
+            ->where('status', 'completed')
+            ->findAll();
+        
+        // Calculate total paid
+        $totalPaid = 0;
+        foreach ($remainingPayments as $detail) {
+            $totalPaid += $detail->amount;
+        }
+        
+        // Get sale
+        $sale = $this->saleModel->find($payment->sale_id);
+        
+        // Update sale status based on remaining payments
+        if ($totalPaid == 0) {
+            $this->saleModel->update($sale->id, [
+                'status' => 'pending'
+            ]);
+            $this->salePaymentModel->update($payment->id, [
+                'status' => 'pending'
+            ]);
+        } else if ($totalPaid < $sale->total) {
+            $this->saleModel->update($sale->id, [
+                'status' => 'process'
+            ]);
+        }
+        
+        // Add activity log
+        $logData = [
+            'admin_id' => session()->get('admin_id'),
+            'table_name' => 'sale_payment_details',
+            'action_type' => 'delete',
+            'old_value' => json_encode($oldPaymentDetail),
+            'new_value' => null,
+        ];
+        
+        $this->activityLogModel->saveActivityLog($logData);
+        
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Pembayaran berhasil dihapus'
+        ]);
+    }
+    
+    /**
+     * Get payment details
+     */
+    public function get_payments()
+    {
+        $saleId = $this->request->getPost('sale_id');
+        
+        if (!$saleId || !is_numeric($saleId)) {
+            return $this->response->setJSON([]);
+        }
+        
+        // Get payment
+        $payment = $this->salePaymentModel->where('sale_id', $saleId)->first();
+        
+        if (!$payment) {
+            return $this->response->setJSON([]);
+        }
+        
+        // Get payment details
+        $paymentDetails = $this->salePaymentDetailModel->where('sale_payment_id', $payment->id)->findAll();
+        
+        if (!$paymentDetails) {
+            return $this->response->setJSON([]);
+        }
+        
+        // Convert object to array with proper property checks
+        $result = [];
+        foreach ($paymentDetails as $detail) {
+            $result[] = [
+                'id' => $detail->id,
+                'sale_payment_id' => $detail->sale_payment_id,
+                'payment_method' => $detail->payment_method ?? 'cash',
+                'amount' => $detail->amount,
+                'payment_date' => $detail->payment_date,
+                'status' => $detail->status,
+                'description' => $detail->description ?? '',
+                'proof' => $detail->proof
+            ];
+        }
+        
+        return $this->response->setJSON($result);
+    }
+
+    /**
+     * Delete sale (soft delete)
+     */
+    public function delete()
+    {
+        // Get sale id from post data
+        $saleId = $this->request->getPost('id');
+        
+        if (!$saleId || !is_numeric($saleId)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'ID penjualan tidak valid'
+            ]);
+        }
+        
+        // Get the sale data before deletion
+        $sale = $this->saleModel->find($saleId);
+        
+        if (!$sale) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Data penjualan tidak ditemukan'
+            ]);
+        }
+        
+        // Store old values for activity log
+        $oldSale = $sale;
+        
+        // Soft delete the sale
+        $this->saleModel->delete($saleId);
+        
+        // Add activity log
+        $logData = [
+            'admin_id' => session()->get('admin_id'),
+            'table_name' => 'sales',
+            'action_type' => 'delete',
+            'old_value' => json_encode($oldSale),
+            'new_value' => null,
+        ];
+        
+        $this->activityLogModel->saveActivityLog($logData);
+        
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Data penjualan berhasil dihapus'
+        ]);
+    }
+    
+    /**
+     * Show archived/deleted sales
+     */
+    public function archived()
+    {
+        $data = [
+            'title' => 'Data Penjualan Diarsipkan',
+            // Get deleted sales data with onlyDeleted() scope
+            'sales' => $this->saleModel->onlyDeleted()->getSales(),
+        ];
+
+        return $this->render('pages/transactions/sales/archived', $data);
+    }
+    
+    /**
+     * Restore deleted sale
+     */
+    public function restore($id = null)
+    {
+        if (!$id || !is_numeric($id)) {
+            session()->setFlashdata('alert', [
+                'type' => 'error',
+                'message' => 'ID penjualan tidak valid'
+            ]);
+            return redirect()->to('/transactions/sales/archived');
+        }
+        
+        // Find the deleted sale
+        $sale = $this->saleModel->onlyDeleted()->find($id);
+        
+        if (!$sale) {
+            session()->setFlashdata('alert', [
+                'type' => 'error',
+                'message' => 'Data penjualan tidak ditemukan'
+            ]);
+            return redirect()->to('/transactions/sales/archived');
+        }
+        
+        // Restore the sale
+        $this->saleModel->update($id, ['deleted_at' => null]);
+        
+        // Add activity log
+        $logData = [
+            'admin_id' => session()->get('admin_id'),
+            'table_name' => 'sales',
+            'action_type' => 'restore',
+            'old_value' => null,
+            'new_value' => json_encode($sale),
+        ];
+        
+        $this->activityLogModel->saveActivityLog($logData);
+        
+        session()->setFlashdata('alert', [
+            'type' => 'success',
+            'message' => 'Data penjualan berhasil dipulihkan'
+        ]);
+        
+        return redirect()->to('/transactions/sales/archived');
     }
 }

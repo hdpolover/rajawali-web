@@ -24,6 +24,11 @@ if (!function_exists('format_indonesian_date')) {
      */
     function format_indonesian_date($date)
     {
+        // Return empty string if date is empty or null
+        if (empty($date) || $date == '0000-00-00' || $date == '0000-00-00 00:00:00') {
+            return '-';
+        }
+
         // convert date to string
         $date = (string) $date;
 
@@ -42,19 +47,26 @@ if (!function_exists('format_indonesian_date')) {
             12 => 'Desember'
         ];
 
+        try {
+            $year = substr($date, 0, 4);
+            $month = (int) substr($date, 5, 2);
+            $day = substr($date, 8, 2);
+            
+            // Validate month value is between 1-12
+            if ($month < 1 || $month > 12) {
+                return '-';
+            }
 
-        $year = substr($date, 0, 4);
-        $month = (int) substr($date, 5, 2);
-        $day = substr($date, 8, 2);
+            // add time
+            if (strlen($date) > 10) {
+                $time = substr($date, 11, 5);
+                return $day . ' ' . $months[$month] . ' ' . $year . ' ' . $time;
+            }
 
-        // add time
-        if (strlen($date) > 10) {
-            $time = substr($date, 11, 5);
-            return $day . ' ' . $months[$month] . ' ' . $year . ' ' . $time;
+            return $day . ' ' . $months[$month] . ' ' . $year;
+        } catch (Exception $e) {
+            return '-';
         }
-
-        return $day . ' ' . $months[$month] . ' ' . $year;
-
     }
 }
 

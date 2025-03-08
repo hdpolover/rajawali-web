@@ -54,8 +54,6 @@
                                     </button>
                                 </td>
                             </tr>
-                            </td>
-                            </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
@@ -69,5 +67,39 @@
 <!-- include Spare Part Modal from the other folder-->
 <?= $this->include('pages/spare_part/components/add'); ?>
 <?= $this->include('pages/spare_part/components/view'); ?>
+<?= $this->include('pages/spare_part/components/edit'); ?>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Hapus Spare Part</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="<?= base_url('master-data/spare-parts/delete') ?>" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="delete_id" id="delete_id">
+                    <p>Apakah Anda yakin ingin menghapus spare part ini?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger">Hapus</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#deleteModal').on('show.bs.modal', function(event) {
+            var button = $(event.relatedTarget);
+            var id = button.data('id');
+            var modal = $(this);
+            modal.find('#delete_id').val(id);
+        });
+    });
+</script>
 
 <?= $this->endSection(); ?>

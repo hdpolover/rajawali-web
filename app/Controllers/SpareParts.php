@@ -5,16 +5,22 @@ namespace App\Controllers;
 
 use App\Models\SparePartModel;
 use App\Models\SparePartTypeModel;
+use App\Models\SparePartDetailModel;
+use App\Models\SparePartPriceHistoryModel;
 
 class SpareParts extends BaseController
 {
     protected $sparePartModel;
     protected $sparePartTypeModel;
+    protected $sparePartDetailModel;
+    protected $sparePartPriceHistoryModel;
 
     public function __construct()
     {
         $this->sparePartModel = new SparePartModel();
         $this->sparePartTypeModel = new SparePartTypeModel();
+        $this->sparePartDetailModel = new SparePartDetailModel();
+        $this->sparePartPriceHistoryModel = new SparePartPriceHistoryModel();
     }
 
     public function index()
@@ -164,6 +170,136 @@ class SpareParts extends BaseController
             ]);
 
             return redirect()->back()->withInput();
+        }
+    }
+    
+    public function edit()
+    {
+        try {
+            $formData = $this->request->getPost();
+            
+            // Get current spare part data
+            $id = $formData['id'];
+            $sparePart = $this->sparePartModel->find($id);
+            
+            if (!$sparePart) {
+                throw new \Exception('Spare part not found');
+            }
+
+            // Get spare part detail
+            $sparePartDetail = $this->sparePartDetailModel->where('spare_part_id', $id)->first();
+            if (!$sparePartDetail) {
+                throw new \Exception('Spare part detail not found');
+            }
+            
+            // Prepare data for updating spare part
+            $sparePartData = [
+                'id' => $id,
+                'name' => $formData['name'],
+                'merk' => $formData['merk'],
+                'code_number' => $formData['code_number'],
+                'description' => $formData['description'],
+                'spare_part_type_id' => $formData['type']
+            ];
+            
+            // Update the spare part data
+            $this->sparePartModel->save($sparePartData);
+            
+            // Check if prices have changed
+            $priceChanged = ($sparePartDetail->current_sell_price != $formData['sell_price'] || 
+                            $sparePartDetail->current_buy_price != $formData['buy_price']);
+            
+            if ($priceChanged) {
+                // Add price history
+                $this->sparePartPriceHistoryModel->save([
+                    'spare_part_id' => $id,
+                    'old_sell_price' => $sparePartDetail->current_sell_price,
+                    'new_sell_price' => $formData['sell_price'],
+                    'old_buy_price' => $sparePartDetail->current_buy_price,
+                    'new_buy_price' => $formData['buy_price'],
+                    'change_date' => date('Y-m-d H:i:s'),
+                ]);
+            }
+            
+            // Update the spare part detail
+            $this->sparePartDetailModel->update($sparePartDetail->id, [
+                'current_stock' => $formData['stock'],
+                'current_sell_price' => $formData['sell_price'],
+                'current_buy_price' => $formData['buy_price']
+            ]);
+            
+            // Add activity log
+            $logData = [
+                'admin_id' => session()->get('admin_id'),
+                'table_name' => 'spare_parts',
+                'action_type' => 'edit',
+                'old_value' => $sparePart->name,
+                'new_value' => $formData['name'],
+            ];
+            
+            $this->activityLogModel->saveActivityLog($logData);
+            
+            // Show success message
+            session()->setFlashdata('alert', [
+                'type' => 'success',
+                'message' => 'Spare part berhasil diperbarui.'
+            ]);
+            
+            return redirect()->to('master-data/spare-parts');
+        } catch (\Exception $e) {
+            log_message('error', 'Failed to edit spare part: ' . $e->getMessage());
+            
+            session()->setFlashdata('alert', [
+                'type' => 'danger',
+                'message' => 'Failed to edit spare part: ' . $e->getMessage()
+            ]);
+            
+            return redirect()->back();
+        }
+    }
+
+    public function delete()
+    {
+        try {
+            $id = $this->request->getPost('delete_id');
+            
+            // Get current spare part data for activity log
+            $sparePart = $this->sparePartModel->find($id);
+            
+            if (!$sparePart) {
+                throw new \Exception('Spare part not found');
+            }
+            
+            // Soft delete the spare part (sets deleted_at)
+            $this->sparePartModel->delete($id);
+            
+            // Add activity log
+            $logData = [
+                'admin_id' => session()->get('admin_id'),
+                'table_name' => 'spare_parts',
+                'action_type' => 'delete',
+                'old_value' => $sparePart->name,
+                'new_value' => null,
+            ];
+            
+            $this->activityLogModel->saveActivityLog($logData);
+            
+            // Show success message
+            session()->setFlashdata('alert', [
+                'type' => 'success',
+                'message' => 'Spare part berhasil dihapus.'
+            ]);
+            
+            return redirect()->to('master-data/spare-parts');
+        } catch (\Exception $e) {
+            log_message('error', 'Failed to delete spare part: ' . $e->getMessage());
+            
+            session()->setFlashdata('alert', [
+                'type' => 'danger',
+                'message' => 'Failed to delete spare part: ' . $e->getMessage()
+            ]);
+            
+            return redirect()->back();
         }
     }
 

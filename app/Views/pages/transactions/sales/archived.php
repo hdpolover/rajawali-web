@@ -4,15 +4,15 @@
 <div class="page-content">
     <div class="row mb-4">
         <div class="col-12 text-end">
-            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#archiveModal">
-                <i class="bi bi-archive"></i>
-            </button>
-            <a href="<?= base_url("/transactions/sales/add") ?>" class="btn btn-primary">
-                <i class="bi bi-plus"></i> Penjualan Baru
+            <a href="<?= base_url("/transactions/sales") ?>" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Kembali
             </a>
         </div>
     </div>
     <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Data Penjualan Diarsipkan</h4>
+        </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table" id="table1">
@@ -23,6 +23,7 @@
                             <th>Tanggal</th>
                             <th>Pelanggan</th>
                             <th>Status</th>
+                            <th>Dihapus Pada</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -44,21 +45,14 @@
                                         <span class="badge bg-danger">Batal</span>
                                     <?php endif; ?>
                                 </td>
+                                <td><?= format_indonesian_date($sale->deleted_at) ?></td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewSaleModal" data-id="<?= $sale->id ?>">
                                         <i class="bi bi-eye"></i>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editSaleModal" data-sale='<?= json_encode($sale) ?>'>
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?= $sale->id ?>">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                    <?php if ($sale->status == 'completed'): ?>
-                                        <a href="<?= base_url("/transactions/sales/print_invoice/" . $sale->id) ?>" class="btn btn-sm btn-info">
-                                            <i class="bi bi-printer"></i>
-                                        </a>
-                                    <?php endif; ?>
+                                    <a href="<?= base_url('transactions/sales/restore/' . $sale->id) ?>" class="btn btn-sm btn-success restore-btn">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -69,10 +63,34 @@
     </div>
 </div>
 
-<?= $this->include('pages/transactions/sales/components/add'); ?>
 <?= $this->include('pages/transactions/sales/components/view'); ?>
-<?= $this->include('pages/transactions/sales/components/edit'); ?>
-<?= $this->include('pages/transactions/sales/components/delete'); ?>
-<?= $this->include('pages/transactions/sales/components/archive'); ?>
+
+<script>
+    $(document).ready(function() {
+        // Initialize datatable
+        $('#table1').DataTable();
+        
+        // Add confirmation for restore buttons
+        $('.restore-btn').on('click', function(e) {
+            e.preventDefault();
+            var restoreUrl = $(this).attr('href');
+            
+            Swal.fire({
+                title: 'Konfirmasi',
+                text: 'Apakah anda yakin ingin memulihkan data penjualan ini?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, pulihkan!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = restoreUrl;
+                }
+            });
+        });
+    });
+</script>
 
 <?= $this->endSection() ?>

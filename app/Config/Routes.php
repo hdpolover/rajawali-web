@@ -51,7 +51,15 @@ $routes->group('transactions', ['filter' => 'auth'], function ($routes) {
     $routes->post('sales/delete', 'Sales::delete');
     // save
     $routes->post('sales/save', 'Sales::save');
-
+    // payment management routes
+    $routes->post('sales/update', 'Sales::update');
+    $routes->post('sales/add_payment', 'Sales::add_payment');
+    $routes->post('sales/delete_payment', 'Sales::delete_payment');
+    $routes->post('sales/get_payments', 'Sales::get_payments');
+    $routes->get('sales/print_invoice/(:num)', 'Sales::print_invoice/$1');
+    // Archive management routes
+    $routes->get('sales/archived', 'Sales::archived');
+    $routes->get('sales/restore/(:num)', 'Sales::restore/$1');
 
     // purchases routes
     $routes->get('purchases', 'Purchases::index');
