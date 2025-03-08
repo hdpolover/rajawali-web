@@ -72,4 +72,38 @@ class Mechanics extends BaseController
         return redirect()->to('/mechanics');
     }
 
+    // fetch data
+
+    public function fetch()
+    {
+        $response = array();
+
+        $searchTerm = $this->request->getPost('name');
+
+        // if search term is not empty
+        if ($searchTerm) {
+            $mechanics = $this->mechanicModel->select('id,name')
+                ->like('name', $searchTerm)
+                ->orderBy('name')
+                ->findAll();
+        } else {
+            $mechanics = $this->mechanicModel->findAll();
+        }
+
+        // return data as data with id and name
+        $data = [];
+
+        foreach ($mechanics as $mechanic) {
+            $data[] = [
+                // convert id to int
+                'id' => (int)$mechanic->id,
+                'text' => $mechanic->name,
+            ];
+        }
+
+        $response['data'] = $data;
+
+        return $this->response->setJSON($response);
+    }
+
 }

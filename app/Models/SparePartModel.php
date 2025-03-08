@@ -4,15 +4,13 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
-use App\Entities\SparePart;
-use App\Entities\SparePartDetail;
 
 class SparePartModel extends Model
 {
     protected $table = 'spare_parts';
     protected $primaryKey = 'id';
     protected $allowedFields = [
-        'spare_part_type_id',   
+        'spare_part_type_id',
         'name',
         'merk',
         'photo',
@@ -24,7 +22,7 @@ class SparePartModel extends Model
     ];
     protected $useTimestamps = true;
     protected $useSoftDeletes = true;
-    protected $returnType = SparePart::class;
+    protected $returnType = 'object';
 
     protected $validationRules = [
         'name' => 'required|string|max_length[100]',
@@ -51,11 +49,11 @@ class SparePartModel extends Model
     // add spare part with the price details
     public function saveWithPriceDetails($data)
     {
-        
+
         $spData = [
             'name' => $data['name'],
             'merk' => $data['merk'],
-            // 'photo' => $data['photo'],
+            'photo' => $data['photo'],
             'code_number' => $data['code_number'],
             'description' => $data['description'],
             'spare_part_type_id' => $data['spare_part_type_id'],
@@ -102,79 +100,52 @@ class SparePartModel extends Model
             $builder->select('spare_parts.*');
 
             // Execute the query and get the result as an array of objects
-            $results = $builder->get()->getResultArray();
+            $results = $builder->get()->getResult();
 
             $spareParts = [];
 
-            foreach ($results as $row) {
-                // Create a new SparePart entity for each spare part
-                $sparePart = new SparePart($row);
-
+            foreach ($results as $sparePart) {
                 // set spare part type
                 $sparePartTypeModel = new SparePartTypeModel();
-
                 $sparePartType = $sparePartTypeModel->find($sparePart->spare_part_type_id);
-
-                $sparePart->setType($sparePartType);
+                $sparePart->type = $sparePartType;
 
                 // get spare part detail by spare part id from spare part detail model
                 $sparePartDetailModel = new SparePartDetailModel();
-
                 $detail = $sparePartDetailModel->where('spare_part_id', $sparePart->id)->first();
 
-                // Create a SparePartDetail entity and set it
-                $details = new SparePartDetail([
-                    'id' => $detail->id,
-                    'spare_part_id' => $detail->spare_part_id,
-                    'current_stock' => $detail->current_stock,
-                    'current_sell_price' => $detail->current_sell_price,
-                    'current_buy_price' => $detail->current_buy_price,
-                    'created_at' => $detail->created_at,
-                    'updated_at' => $detail->updated_at,
-                    'deleted_at' => $detail->deleted_at,
-                ]);
+                // Create a details object and attach it to the spare part
+                $sparePart->details = $detail;
 
-                // Attach the SparePartDetail entity to the SparePart entity
-                $sparePart->setDetails($details);
-
-                // Add the entity to the spare parts array
+                // Add the object to the spare parts array
                 $spareParts[] = $sparePart;
             }
 
-            return $spareParts; // Return an array of entities
+            return $spareParts; // Return an array of objects
 
         } else {
             // Perform the query to join spare_parts with spare_part_details
             $builder = $this->db->table('spare_parts');
             $builder->select('spare_parts.*');
 
-            // Execute the query and get the result as an array of objects
-            $result = $builder->getWhere(['spare_parts.id' => $id])->getRowArray();
+            // Execute the query and get the result as an object
+            $sparePart = $builder->getWhere(['spare_parts.id' => $id])->getRow();
 
-            // Create a new SparePart entity
-            $sparePart = new SparePart($result);
+            if (!$sparePart) {
+                return null;
+            }
+
+            // set spare part type
+            $sparePartTypeModel = new SparePartTypeModel();
+            $sparePartType = $sparePartTypeModel->find($sparePart->spare_part_type_id);
+            $sparePart->type = $sparePartType;
 
             // get spare part detail by spare part id from spare part detail model
             $sparePartDetailModel = new SparePartDetailModel();
-
             $detail = $sparePartDetailModel->where('spare_part_id', $sparePart->id)->first();
+            $sparePart->details = $detail;
 
-            // Create a SparePartDetail entity and set it
-            $details = new SparePartDetail([
-                'id' => $detail->id,
-                'spare_part_id' => $detail->spare_part_id,
-                'current_stock' => $detail->current_stock,
-                'current_sell_price' => $detail->current_sell_price,
-                'current_buy_price' => $detail->current_buy_price,
-                'created_at' => $detail->created_at,
-                'updated_at' => $detail->updated_at,
-                'deleted_at' => $detail->deleted_at,
-            ]);
-
-            // Attach the SparePartDetail entity to the SparePart entity
-            $sparePart->setDetails($details);
-
-            return $sparePart; // Return the entity
+            return $sparePart; // Return the object
         }
     }
 

@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use App\Entities\Sale;
 use CodeIgniter\Model;
+use App\Models\SalePaymentDetailModel;
 
 class SaleModel extends Model
 {
     protected $table = 'sales';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType = Sale::class;
+    protected $returnType = 'object';
 
     protected $allowedFields = [
         'customer_id',
@@ -32,8 +32,6 @@ class SaleModel extends Model
     protected $updatedField = 'updated_at';
 
     protected $validationRules = [
-        'customer_id' => 'required',
-        'motorcycle_id' => 'required',
         'sale_number' => 'required',
         'admin_id' => 'required',
         'discount' => 'required|numeric',
@@ -69,9 +67,30 @@ class SaleModel extends Model
         'sale_date' => [
             'required' => 'Tanggal penjualan wajib diisi'
         ]
-        ];
+    ];
 
-    public function getSales($id = null) {
+    public function getSalesSummaryToday()
+    {
+        $today = date('Y-m-d'); // Get today's date
+
+        return $this->select('status, COUNT(id) as count')
+            ->where("DATE(created_at)", $today)
+            ->groupBy('status')
+            ->findAll();
+    }
+
+    public function getTotalSalesToday()
+    {
+        $today = date('Y-m-d');
+
+        return $this->selectSum('total')
+            ->where("DATE(created_at)", $today)
+            ->where("status", "completed") // Only count completed sales for revenue
+            ->first();
+    }
+
+    public function getSales($id = null)
+    {
         if ($id == null) {
             // builder
             $builder = $this->db->table('sales');
@@ -79,62 +98,111 @@ class SaleModel extends Model
             $builder->select('sales.*');
 
             // Execute the query and get the result as an array of objects
-            $saleResult = $builder->get()->getResultArray();
+            $saleResult = $builder->get()->getResult();
 
             // create an array of sale entities
             $sales = [];
 
             // loop through the results and create sale entities
-            foreach ($saleResult as $data) {
-                // get the sale entity
-                $sale = new Sale($data);
+            foreach ($saleResult as $sale) {
 
                 // get the customer entity
                 $customerModel = new CustomerModel();
-                $customer = $customerModel->find($sale->customer_id);
-                $sale->setCustomer($customer);
+                $customer = $customerModel->where('id', $sale->customer_id)->first();
+
+                if ($customer) {
+                    $sale->customer = $customer;
+                } else {
+                    $sale->customer = null;
+                }
 
                 // get the motorcycle entity
                 $motorcycleModel = new MotorcycleModel();
-                $motorcycle = $motorcycleModel->find($sale->motorcycle_id);
-                $sale->setMotorcycle($motorcycle);
+                $motorcycle = $motorcycleModel->where('id', $sale->motorcycle_id)->first();
+                
+                if ($motorcycle) {
+                    $sale->motorcycle = $motorcycle;
+                } else {
+                    $sale->motorcycle = null;
+                }
 
                 // get the admin entity
                 $adminModel = new AdminModel();
                 $admin = $adminModel->find($sale->admin_id);
-                $sale->setAdmin($admin);
+                $sale->admin = $admin;
 
                 // get spare part sales
                 $sparePartSaleModel = new SparePartSaleModel();
 
-                $sparePartSales = $sparePartSaleModel->where('sale_id', $sale->id)->findAll();
+                // get 1 spare part sale for this sale and return as object
+                $sparePartSale = $sparePartSaleModel->where('sale_id', $sale->id)->first();
 
                 // get spare part sale details
-                $sparePartModel = new SparePartModel();
+                $sparePartSaleDetailModel = new SparePartSaleDetailModel();
 
-                foreach ($sparePartSales as $sparePartSale) {
-                    $sparePart = $sparePartModel->find($sparePartSale->spare_part_id);
-                    $sparePartSale->setSparePart($sparePart);
+                $sparePartSaleDetails = $sparePartSaleDetailModel->where('spare_part_sale_id', $sparePartSale->id)->findAll();
+
+                for ($i = 0; $i < count($sparePartSaleDetails); $i++) {
+                    $sparePartModel = new SparePartModel();
+                    $sparePart = $sparePartModel->find($sparePartSaleDetails[$i]->spare_part_id);
+                    $sparePartSaleDetails[$i]->spare_part = $sparePart;
                 }
 
+                // set the spare part sale details
+                $sparePartSale->details = $sparePartSaleDetails;
+
                 // set the spare part sales
-                $sale->setSparePartSales($sparePartSales);
+                $sale->spare_part_sale = $sparePartSale;
 
                 // get service sales
                 $serviceSaleModel = new ServiceSaleModel();
 
-                $serviceSales = $serviceSaleModel->where('sale_id', $sale->id)->findAll();
+                $serviceSales = $serviceSaleModel->where('sale_id', $sale->id)->first();
 
-                // get service sale details
-                $serviceModel = new ServiceModel();
+                if ($serviceSales) {
+                    // get service sale details
+                    $serviceSaleDetailModel = new ServiceSaleDetailModel();
 
-                foreach ($serviceSales as $serviceSale) {
-                    $service = $serviceModel->find($serviceSale->service_id);
-                    $serviceSale->setService($service);
+                    $serviceSaleDetails = $serviceSaleDetailModel->where('service_sale_id', $serviceSales->id)->findAll();
+
+                    for ($i = 0; $i < count($serviceSaleDetails); $i++) {
+                        $serviceModel = new ServiceModel();
+                        $service = $serviceModel->find($serviceSaleDetails[$i]->service_id);
+                        $serviceSaleDetails[$i]->service = $service;
+
+                        $mechanicModel = new MechanicModel();
+                        $mechanic = $mechanicModel->find($serviceSaleDetails[$i]->mechanic_id);
+                        $serviceSaleDetails[$i]->mechanic = $mechanic;  
+                    }
+
+                    // set the service sale details
+                    $serviceSales->details = $serviceSaleDetails;
+
+                    // set the service sales
+                    $sale->service_sales = $serviceSales;
+                } else {
+                    $sale->service_sales = null;
+                }   
+
+                // get the payment entity
+                $salePaymentModel = new SalePaymentModel();
+
+                $payment = $salePaymentModel->where('sale_id', $sale->id)->first();
+
+                if ($payment) {
+                    // get the payment details
+                    $salePaymentDetailModel = new SalePaymentDetailModel();
+
+                    $paymentDetails = $salePaymentDetailModel->where('sale_payment_id', $payment->id)->findAll();
+
+                    // set the payment details
+                    $payment->details = $paymentDetails;
+
+                    // set the payment
+                    $sale->payment = $payment;
+                } else {
+                    $sale->payment = null;
                 }
-
-                // set the service sales
-                $sale->setServiceSales($serviceSales);
 
                 // add the sale entity to the array
                 $sales[] = $sale;
@@ -145,5 +213,4 @@ class SaleModel extends Model
             return $this->where('id', $id)->first();
         }
     }
-    
 }

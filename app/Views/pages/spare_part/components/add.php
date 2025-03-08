@@ -179,6 +179,13 @@
         $('#addModal').on('hidden.bs.modal', function() {
             codeNumberInput.value = '';
             restOfForm.classList.add('d-none');
+
+            // clear all inputs
+            const inputs = document.querySelectorAll('#addSparePartForm input, #addSparePartForm textarea, #addSparePartForm select');
+            inputs.forEach(input => {
+                input.value = '';
+            });
+            
             //generateCodeContainer.classList.remove('d-none');
             //webCameraScannerPreview.classList.add('d-none');
             //stopScanner();

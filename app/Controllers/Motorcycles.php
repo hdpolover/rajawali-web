@@ -75,4 +75,66 @@ class Motorcycles extends BaseController
 
         return redirect()->to('/motorcycles');
     }
+
+    // add function
+    public function addAlt()
+    {
+        $response = ['success' => false, 'message' => ''];
+
+        // get form data
+        $formData = [
+            'model'   => $this->request->getPost('model'),
+            'brand'  => $this->request->getPost('brand'),
+            'customer_id' => $this->request->getPost('customer_id'),
+            'license_number' => $this->request->getPost('license_number')
+        ];
+
+        // validate form data
+        if (!$this->validate($this->motorcycleModel->getValidationRules())) {
+            $response['message'] = $this->validator->getErrors();
+            return $this->response->setJSON($response);
+        }
+
+        // insert data
+        $savedData = $this->motorcycleModel->save($formData);
+
+        if ($savedData) {
+            $response['success'] = true;
+            $response['data'] = $this->motorcycleModel->find($this->motorcycleModel->insertID);
+        } else {
+            $response['message'] = 'Data gagal ditambahkan';
+        }
+
+        return $this->response->setJSON($response);
+    }
+
+    public function fetchByCustomerId()
+    {
+        $customerId = $this->request->getVar('customer_id');
+
+        if (!$customerId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'data' => []
+            ]);
+        }
+
+        $motorcycles = $this->motorcycleModel
+            ->select('id, brand, model, license_number')
+            ->where('customer_id', $customerId)
+            ->orderBy('model')
+            ->findAll();
+
+        $data = array_map(function ($m) {
+            return [
+                'id' => (int)$m->id,
+                'text' => "{$m->brand} {$m->model} - {$m->license_number}"
+            ];
+        }, $motorcycles);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
 }

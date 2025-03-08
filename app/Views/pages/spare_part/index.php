@@ -6,9 +6,9 @@
 
     <div class="row mb-4">
         <div class="col-12 text-end">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+        <a href="<?= base_url("master-data/spare-parts/new") ?>" class="btn btn-primary">
                 <i class="bi bi-plus"></i> Spare Part Baru
-            </button>
+            </a>
         </div>
     </div>
     <div class="card">
@@ -33,15 +33,15 @@
                                 <td><?= $index + 1 ?></td>
                                 <td><?= esc($spare_part->code_number) ?></td>
                                 <!-- <td>
-                                    <?php
-                                    $sparePartImage = STORAGE_URL . DIRECTORY_SEPARATOR . 'spare_parts' . DIRECTORY_SEPARATOR . $spare_part->photo;
-                                    ?>
-                                    <img src="<?= $sparePartImage ?>" alt="<?= esc($spare_part->name) ?>" class="img-fluid" style="max-width: 100px;">
-                                </td> -->
+                                     <?php
+                                        $sparePartImage = STORAGE_URL . DIRECTORY_SEPARATOR . 'spare_parts' . DIRECTORY_SEPARATOR . $spare_part->photo;
+                                        ?>
+                                        <img src="<?= $sparePartImage ?>" alt="<?= esc($spare_part->name) ?>" class="img-fluid" style="max-width: 100px;">
+                                     </td> -->
                                 <td><?= esc($spare_part->name) ?></td>
                                 <td><?= esc($spare_part->merk) ?></td>
-                                <td><?= esc($spare_part->details->current_stock) ?></td>
-                                <td><?= format_rupiah( esc($spare_part->details->current_sell_price)) ?></td>
+                                <td class="<?= $spare_part->details->current_stock < 5 ? 'table-danger' : '' ?>"><?= esc($spare_part->details->current_stock) ?></td>
+                                <td><?= format_rupiah(esc($spare_part->details->current_sell_price)) ?></td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewModal" data-id="<?= $spare_part->id ?>">
                                         <i class="bi bi-eye"></i>
@@ -53,6 +53,8 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </td>
+                            </tr>
+                            </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

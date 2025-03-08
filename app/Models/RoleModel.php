@@ -7,6 +7,7 @@ use CodeIgniter\Model;
 use App\Models\AdminModel;
 use App\Models\MenuModel;
 
+
 class RoleModel extends Model
 {
     protected $table = 'roles';

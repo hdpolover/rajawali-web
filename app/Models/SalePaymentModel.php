@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-
 use CodeIgniter\Model;
 
-class SparePartSaleModel extends Model
+class SalePaymentModel extends Model
 {
-    protected $table = 'spare_part_sales';
+    protected $table = 'sale_payments';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
     protected $returnType = 'object';
@@ -18,8 +17,8 @@ class SparePartSaleModel extends Model
 
     protected $allowedFields = [
         'sale_id',
-        'description',
         'total',
+        'status',
         'created_at',
         'updated_at',
         'deleted_at'

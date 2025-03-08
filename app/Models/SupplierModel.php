@@ -4,16 +4,12 @@
 namespace App\Models;
 use CodeIgniter\Model;
 
-// import entities
-use App\Entities\Supplier;
-
-
 class SupplierModel extends Model
 {
     protected $table = 'suppliers';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType = Supplier::class;
+    protected $returnType = 'object';
 
     protected $allowedFields = [
         'name',

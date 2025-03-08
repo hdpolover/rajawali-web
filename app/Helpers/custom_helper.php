@@ -24,6 +24,9 @@ if (!function_exists('format_indonesian_date')) {
      */
     function format_indonesian_date($date)
     {
+        // convert date to string
+        $date = (string) $date;
+
         $months = [
             1 => 'Januari',
             2 => 'Februari',
@@ -39,19 +42,19 @@ if (!function_exists('format_indonesian_date')) {
             12 => 'Desember'
         ];
 
-        $dateTimeParts = explode(' ', $date);
-        $dateParts = explode('-', $dateTimeParts[0]);
-        $year = $dateParts[0];
-        $month = (int) $dateParts[1];
-        $day = $dateParts[2];
 
-        $formattedDate = $day . ' ' . $months[$month] . ' ' . $year;
+        $year = substr($date, 0, 4);
+        $month = (int) substr($date, 5, 2);
+        $day = substr($date, 8, 2);
 
-        if (isset($dateTimeParts[1]) && $dateTimeParts[1] !== '00:00:00') {
-            $formattedDate .= ' ' . $dateTimeParts[1];
+        // add time
+        if (strlen($date) > 10) {
+            $time = substr($date, 11, 5);
+            return $day . ' ' . $months[$month] . ' ' . $year . ' ' . $time;
         }
 
-        return $formattedDate;
+        return $day . ' ' . $months[$month] . ' ' . $year;
+
     }
 }
 

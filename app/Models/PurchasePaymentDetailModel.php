@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
-use App\Entities\PurchasePaymentDetail;
 
 
 class PurchasePaymentDetailModel extends Model
@@ -11,7 +10,7 @@ class PurchasePaymentDetailModel extends Model
     protected $table = 'purchase_payment_details';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType = PurchasePaymentDetail::class;
+    protected $returnType = 'object';
 
     protected $allowedFields = [
         'purchase_payment_id',

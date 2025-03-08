@@ -18,13 +18,14 @@ class Customers extends BaseController
     {
         $data = [
             'title'       => 'Data Pelanggan',
-            'customers' => $this->customerModel->findAll(),
+            'customers' => $this->customerModel->findAll(), // sort by name
         ];
 
         return $this->render('pages/customer/index', $data);
     }
 
-    public function fetch() {
+    public function fetch()
+    {
         $response = array();
 
         if ($this->request->getPost('name')) {
@@ -58,15 +59,12 @@ class Customers extends BaseController
     // add function
     public function add()
     {
-
         // get form data
         $formData = [
             'name'   => $this->request->getPost('name'),
             'phone'  => $this->request->getPost('phone'),
             'address' => $this->request->getPost('address')
         ];
-
-        var_dump($formData);
 
         // validate form data
         if (!$this->validate($this->customerModel->getValidationRules())) {
@@ -103,6 +101,52 @@ class Customers extends BaseController
         }
 
         return redirect()->to('/customers');
+    }
+
+    // add function
+    public function addAlt()
+    {
+        $response = ['success' => false, 'message' => ''];
+
+        try {
+            // Get form data
+            $formData = [
+                'name'    => $this->request->getPost('name'),
+                'phone'   => $this->request->getPost('phone'),
+                'address' => $this->request->getPost('address')
+            ];
+
+            // Validate form data
+            if (!$this->validate($this->customerModel->getValidationRules())) {
+                $response['message'] = implode(', ', $this->validator->getErrors());
+                return $this->response->setJSON($response);
+            }
+
+            // Save data
+            $saved = $this->customerModel->save($formData);
+
+            if ($saved) {
+                // Add activity log
+                $logData = [
+                    'admin_id' => session()->get('admin_id'),
+                    'table_name' => 'customers',
+                    'action_type' => 'add',
+                    'old_value' => null,
+                    'new_value' => $formData['name'],
+                ];
+
+                $this->activityLogModel->saveActivityLog($logData);
+
+                $response['success'] = true;
+                $response['message'] = 'Berhasil menyimpan data pelanggan';
+            } else {
+                $response['message'] = 'Gagal menyimpan data pelanggan';
+            }
+        } catch (\Exception $e) {
+            $response['message'] = 'Error: ' . $e->getMessage();
+        }
+
+        return $this->response->setJSON($response);
     }
 
     // edit function

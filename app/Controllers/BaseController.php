@@ -14,7 +14,7 @@ use App\Models\AdminModel;
 abstract class BaseController extends Controller
 {
     protected $request;
-    protected $helpers = ['custom_helper',];
+    protected $helpers = ['custom_helper', 'file_upload_helper'];
     protected $session;
 
     protected $adminModel;
@@ -64,6 +64,7 @@ abstract class BaseController extends Controller
     protected function getBreadcrumbs()
     {
         $currentUrl = uri_string(); // Get the current URI
+
         $breadcrumbs = $this->menuModel->getBreadcrumbs($currentUrl);
         return $breadcrumbs;
     }

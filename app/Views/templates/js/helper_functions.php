@@ -12,6 +12,11 @@
         });
     }
 
+    // function to revert formatted currency to number
+    function revertCurrencyID(amount) {
+        return parseInt(amount.replace(/[^0-9]/g, ''));
+    }
+
     function formatDateTime(date) {
         // if date contains time, format it to include time. Otherwise, only show date
         $options = {

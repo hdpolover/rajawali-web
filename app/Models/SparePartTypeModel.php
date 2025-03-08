@@ -3,7 +3,6 @@
 
 namespace App\Models;
 
-use App\Entities\SparePartType;
 use CodeIgniter\Model;
 
 class SparePartTypeModel extends Model
@@ -11,7 +10,7 @@ class SparePartTypeModel extends Model
     protected $table = 'spare_part_types';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType = SparePartType::class;
+    protected $returnType = 'object';
     protected $allowedFields = [
         'name',
         'description',

@@ -3,9 +3,6 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
-use App\Entities\Purchase;
-use App\Entities\Admin;
-use App\Entities\Supplier;
 use App\Models\PurchasePaymentModel;
 
 
@@ -14,7 +11,7 @@ class PurchaseModel extends Model
     protected $table = 'purchases';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType = Purchase::class;
+    protected $returnType = 'object';
 
     protected $allowedFields = [
         'supplier_id',
@@ -61,27 +58,24 @@ class PurchaseModel extends Model
             $builder->select('purchases.*');
 
             // Execute the query and get the result as an array of objects
-            $purchaseResults = $builder->get()->getResultArray();
+            $purchaseResults = $builder->get()->getResult();
 
-            // create an array of purchase entities
+            // create an array of purchase objects
             $purchases = [];
 
-            // loop through the results and create purchase entities
-            foreach ($purchaseResults as $purchaseResult) {
-                // create a new purchase entity
-                $purchase = new Purchase($purchaseResult);
-
+            // loop through the results and create purchase objects
+            foreach ($purchaseResults as $purchase) {
                 // get the supplier
                 $supplierModel = new SupplierModel();
-                $supplier = $supplierModel->find($purchaseResult['supplier_id']);
+                $supplier = $supplierModel->find($purchase->supplier_id);
                 // set the supplier
-                $purchase->setSupplier($supplier);
+                $purchase->supplier = $supplier;
 
                 // get the admin
                 $adminModel = new AdminModel();
-                $admin = $adminModel->find($purchaseResult['admin_id']);
+                $admin = $adminModel->find($purchase->admin_id);
                 // set the admin
-                $purchase->setAdmin($admin);
+                $purchase->admin = $admin;
 
                 // get the purchase details
                 $purchaseDetailModel = new PurchaseDetailModel();
@@ -92,11 +86,11 @@ class PurchaseModel extends Model
 
                 foreach ($purchaseDetails as $purchaseDetail) {
                     $sparePart = $sparePartModel->find($purchaseDetail->spare_part_id);
-                    $purchaseDetail->setSparePart($sparePart);
+                    $purchaseDetail->spare_part = $sparePart;
                 }
 
                 // set the purchase details
-                $purchase->setDetails($purchaseDetails);
+                $purchase->details = $purchaseDetails;
 
                 // get the purchase payment
                 $purchasePaymentModel = new PurchasePaymentModel();
@@ -109,12 +103,12 @@ class PurchaseModel extends Model
                 $purchasePaymentDetails = $purchasePaymentDetailModel->where('purchase_payment_id', $purchasePayment->id)->findAll();
 
                 // set the purchase payment details
-                $purchasePayment->setDetails($purchasePaymentDetails);
+                $purchasePayment->details = $purchasePaymentDetails;
 
                 // set the purchase payment
-                $purchase->setPayment($purchasePayment);
+                $purchase->payment = $purchasePayment;
 
-                // add the purchase entity to the array
+                // add the purchase object to the array
                 $purchases[] = $purchase;
             }
 
@@ -127,34 +121,30 @@ class PurchaseModel extends Model
             $builder->join('admins', 'purchases.admin_id = admins.id', 'left');
             $builder->where('purchases.id', $id);
 
-            // Execute the query and get the result as an array of objects
-            $result = $builder->get()->getRowArray();
+            // Execute the query and get the result as an object
+            $purchase = $builder->get()->getRow();
+
+            if (!$purchase) {
+                return null;
+            }
 
             // get the supplier
             $supplierModel = new SupplierModel();
-
-            $supplier = $supplierModel->find($result['supplier_id']);
+            $supplier = $supplierModel->find($purchase->supplier_id);
+            // set the supplier
+            $purchase->supplier = $supplier;
 
             // get the admin
             $adminModel = new AdminModel();
-
-            $admin = $adminModel->find($result['admin_id']);
+            $admin = $adminModel->find($purchase->admin_id);
+            // set the admin
+            $purchase->admin = $admin;
 
             // get the purchase details
             $purchaseDetailModel = new PurchaseDetailModel();
-
-            // create a new purchase entity
-            $purchase = new Purchase($result);
-
-            // set the supplier and admin
-            $purchase->setSupplier($supplier);
-            $purchase->setAdmin($admin);
-
-            // get the purchase details
             $purchaseDetails = $purchaseDetailModel->where('purchase_id', $purchase->id)->findAll();
-
             // set the purchase details
-            $purchase->setDetails($purchaseDetails);
+            $purchase->details = $purchaseDetails;
 
             return $purchase;
         }
@@ -163,7 +153,7 @@ class PurchaseModel extends Model
     function savePurchase($data)
     {
         // create a new purchase entity
-        $purchase = new Purchase($data);
+        $purchase = new PurchaseModel($data);
 
         // save the purchase
         $this->save($purchase);

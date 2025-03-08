@@ -25,7 +25,24 @@ class SpareParts extends BaseController
             'spare_part_types' => $this->sparePartTypeModel->findAll(),
         ];
 
+        // sort spare parts by stock ascending
+        usort($data['spare_parts'], function ($a, $b) {
+            return $a->details->current_stock - $b->details->current_stock;
+        });
+
+
         return $this->render('pages/spare_part/index', $data);
+    }
+
+    // add new
+    public function new()
+    {
+        $data = [
+            'title' => 'Tambah Spare Part Baru',
+            'spare_part_types' => $this->sparePartTypeModel->findAll(),
+        ];
+
+        return $this->render('pages/spare_part/new', $data);
     }
 
     // fetch spare parts data
@@ -37,10 +54,10 @@ class SpareParts extends BaseController
 
             $searchTerm = $this->request->getPost('name');
 
-            $spareParts = $this->sparePartModel->select('id,name,code_number')
+            $spareParts = $this->sparePartModel->select('id,merk,name,code_number')
                 ->groupStart()
-                    ->like('name', $searchTerm)
-                    ->orLike('code_number', $searchTerm)
+                ->like('name', $searchTerm)
+                ->orLike('code_number', $searchTerm)
                 ->groupEnd()
                 ->orderBy('name')
                 ->findAll();
@@ -56,7 +73,7 @@ class SpareParts extends BaseController
                 // convert id to int
                 'id' => (int)$sparePart->id,
                 'code_number' => $sparePart->code_number,
-                'text' => $sparePart->name,
+                'text' => $sparePart->merk . " " . $sparePart->name,
             ];
         }
 
@@ -73,53 +90,54 @@ class SpareParts extends BaseController
         return $this->response->setJSON($priceHistories);
     }
 
-    public function add() {
-        // get form data from multipart form
-        $formData = [
-            'name' => $this->request->getPost('name'),
-            'merk' => $this->request->getPost('merk'),
-            // 'photo' => $this->request->getFile('photo'),
-            'code_number' => $this->request->getPost('code_number'),
-            'description' => $this->request->getPost('description'),
-            'spare_part_type_id' => $this->request->getPost('type'),
-            'current_stock' => $this->request->getPost('stock'),
-            'current_sell_price' => $this->request->getPost('sell_price'),
-            'current_buy_price' => $this->request->getPost('buy_price'),
-        ];
+    public function add()
+    {
+        try {
+            $formData = $this->request->getPost();
+            // $photo = $this->request->getFile('photo');
+            $isBase64 = false;
 
-        // validate form data
-        // if (!$this->validate([
-        //     'name' => 'required|string|max_length[100]',
-        //     'merk' => 'string|max_length[100]',
-        //     'description' => 'required|string',
-        //     'photo' => 'uploaded[photo]|max_size[photo,1024]|is_image[photo]',
-        //     'stock' => 'required|numeric',
-        //     'sell_price' => 'required|numeric',
-        //     'buy_price' => 'required|numeric',
-        // ])) {
-        //     return redirect()->to('/spare-parts')->withInput()->with('errors', $this->validator->getErrors());
-        // }
+            // Check if it's a regular file upload or base64 image
+            // if ($photo && $photo->isValid() && !$photo->hasMoved()) {
+            //     $uploadFile = $photo;
+            // } else if (!empty($formData['photo']) && strpos($formData['photo'], 'data:image') === 0) {
+            //     $uploadFile = $formData['photo'];
+            //     $isBase64 = true;
+            // } else {
+            //     throw new \Exception('No valid photo provided');
+            // }
 
-        //upload photo and use FileUpload helper
-        // $photo = $formData['photo'];
+            // // Upload photo using FileUpload helper
+            // $uploadResult = uploadFileToStorage('spare_parts', $uploadFile, $isBase64);
 
-        // // check if photo is not empty
-        // if ($photo->getSize() == 0) {
-        //     log_message('error', 'Photo is empty');
+            // if (!$uploadResult['status']) {
+            //     throw new \Exception($uploadResult['message']);
+            // }
 
-        //     return;
-        // } 
-        // // use FileUpload helper
-        // $photoPath = uploadFileToStorage('spare_parts', $photo);
+            // // Set photo URL to form data
+            // $formData['photo'] = $uploadResult['url'];
 
-        // // set photo path to form data
-        // $formData['photo'] = $photoPath;
+            // Prepare data for saving
+            $data = [
+                'name' => $formData['name'],
+                'merk' => $formData['brand'],
+                'photo' => 'default.jpg',
+                'code_number' => $formData['sparePartCode'],
+                'description' => $formData['description'],
+                'spare_part_type_id' => $formData['type'],
+                'current_stock' => $formData['initialStock'],
+                'current_sell_price' => $formData['initialSellingPrice'],
+                'current_buy_price' => $formData['initialPurchasePrice'],
+            ];
 
-        // save spare part with price details
-        $result = $this->sparePartModel->saveWithPriceDetails($formData);
+            // Save spare part with price details
+            $result = $this->sparePartModel->saveWithPriceDetails($data);
 
-        if ($result) {
-            // add activity log
+            if (!$result) {
+                throw new \Exception('Failed to save spare part data');
+            }
+
+            // Add activity log
             $logData = [
                 'admin_id' => session()->get('admin_id'),
                 'table_name' => 'spare_parts',
@@ -130,25 +148,24 @@ class SpareParts extends BaseController
 
             $this->activityLogModel->saveActivityLog($logData);
 
-            // show success message and redirect to the previous page. set alert session data
+            // Show success message
             session()->setFlashdata('alert', [
                 'type' => 'success',
                 'message' => 'Spare part berhasil ditambahkan.'
             ]);
 
-            return redirect()->to('/spare-parts');
-        } else {
-            // show error message and redirect to the previous page. set alert session data
+            return redirect()->to('master-data/spare-parts');
+        } catch (\Exception $e) {
+            log_message('error', 'Failed to add spare part: ' . $e->getMessage());
+
             session()->setFlashdata('alert', [
                 'type' => 'danger',
-                'message' => 'Spare part gagal ditambahkan.'
+                'message' => 'Failed to add spare part: ' . $e->getMessage()
             ]);
 
-            return redirect()->to('/spare-parts');
+            return redirect()->back()->withInput();
         }
     }
 
-    public function generate_barcode() {
-        
-    }
+    public function generate_barcode() {}
 }

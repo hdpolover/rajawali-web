@@ -1,57 +1,83 @@
 <?php
 
+use \FtpClient\FtpClient;
+
 if (!function_exists('uploadFileToStorage')) {
-    /**
-     * Upload a file to a remote storage server
-     *
-     * @param string $url The API endpoint on the remote storage server
-     * @param \CodeIgniter\HTTP\Files\UploadedFile $file The uploaded file object
-     * @return array The response status and message
-     */
-    function uploadFileToStorage(string $path, \CodeIgniter\HTTP\Files\UploadedFile $file): array
+    function uploadFileToStorage($directory, $file, $isBase64 = false) 
     {
-        if ($file->isValid() && !$file->hasMoved()) {
-            // Get file details
-            $filePath = $file->getTempName();
-            $fileName = $file->getName();
-            $mimeType = $file->getMimeType();
+        // Storage server configuration
+        $storageConfig = [
+            'host' => 'ftp.bengkelrajawalimotor.com',
+            'username' => 'u544553474.storageftp',
+            'password' => 'B4z]o]r7zU/xdkcu',
+            'port' => 21
+        ];
 
-            $uniqueName = uniqid() . '_' . $fileName;
-
-            // Prepare the cURL request
-            $curl = curl_init();
-
-            $cFile = curl_file_create($filePath, $mimeType, $uniqueName);
-
-            $storageUrl = 'https://storage.bengkelrajawalimotor.com/uploads/';
-
-            $url = $storageUrl . $path . '/' . $uniqueName;
-
-            $postFields = [
-                'file' => $cFile,
-            ];
-
-            curl_setopt_array($curl, [
-                CURLOPT_URL            => $url,
-                CURLOPT_POST           => true,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POSTFIELDS     => $postFields,
-                CURLOPT_HTTPHEADER     => [
-                    'Accept: application/json',
-                ],
-            ]);
-
-            $response = curl_exec($curl);
-            $error    = curl_error($curl);
-            curl_close($curl);
-
-            if ($error) {
-                return ['status' => false, 'message' => 'cURL Error: ' . $error];
+        try {
+            // Handle base64 image from camera
+            if ($isBase64) {
+                $tempFile = tempnam(sys_get_temp_dir(), 'upload_');
+                $base64_string = explode(',', $file)[1];
+                file_put_contents($tempFile, base64_decode($base64_string));
+                $mimeType = 'image/png';
+                $uniqueName = uniqid() . '.png';
+            } else {
+                if (!$file instanceof \CodeIgniter\HTTP\Files\UploadedFile) {
+                    throw new \Exception('Invalid file upload');
+                }
+                $tempFile = $file->getTempName();
+                $mimeType = $file->getMimeType();
+                $uniqueName = $file->getRandomName();
             }
 
-            return ['status' => true, 'message' => 'File uploaded successfully!', 'response' => $response];
-        }
+            // Initialize FTP client
+            $ftp = new FtpClient();
+            $ftp->connect($storageConfig['host'], false, $storageConfig['port']);
+            $ftp->login($storageConfig['username'], $storageConfig['password']);
+            
+            // Set passive mode
+            $ftp->pasv(true);
 
-        return ['status' => false, 'message' => 'Invalid file upload.'];
+            // Create directory if not exists
+            $uploadPath = '/uploads/' . trim($directory, '/');
+            if (!$ftp->isDir($uploadPath)) {
+                $ftp->mkDirRecursive($uploadPath);
+            }
+
+            // Change to upload directory
+            $ftp->chdir($uploadPath);
+
+            // Upload file
+            if (!$ftp->put($uniqueName, $tempFile, FTP_BINARY)) {
+                throw new \Exception('Failed to upload file');
+            }
+
+            // Clean up temp file if it was created from base64
+            if ($isBase64 && file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+
+            // Build public URL
+            $publicUrl = 'https://storage.bengkelrajawalimotor.com/uploads/' . 
+                        trim($directory, '/') . '/' . $uniqueName;
+
+            return [
+                'status' => true,
+                'url' => $publicUrl,
+                'message' => 'File uploaded successfully'
+            ];
+
+        } catch (\Exception $e) {
+            log_message('error', 'FTP upload error: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Upload failed: ' . $e->getMessage()
+            ];
+        } finally {
+            // Close FTP connection if it exists
+            if (isset($ftp) && $ftp->isConnected()) {
+                $ftp->close();
+            }
+        }
     }
 }

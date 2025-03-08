@@ -47,7 +47,7 @@
                                         <span class="badge bg-danger">Tidak Aktif</span>
                                     <?php endif; ?>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewAdminModal" data-id="<?= $admin->id ?>" data-username="<?= esc($admin->username) ?>" data-email="<?= esc($admin->email) ?>" data-role="<?= $current_admin_role ?>">
+                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewAdminModal" data-id="<?= $admin->id ?>" data-username="<?= esc($admin->username) ?>" data-email="<?= esc($admin->email) ?>" data-role="<?= $current_admin_role ?>">
                                         <i class="bi bi-eye"></i>
                                     </button>
                                     <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editAdminModal" data-id="<?= $admin->id ?>" data-username="<?= esc($admin->username) ?>" data-email="<?= esc($admin->email) ?>" data-role="<?= esc($admin->role_id) ?>">
@@ -78,16 +78,18 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <dl class="row">
-                    <dt class="col-sm-4">ID</dt>
-                    <dd class="col-sm-8" id="view_id"></dd>
-                    <dt class="col-sm-4">Username</dt>
-                    <dd class="col-sm-8" id="view_username"></dd>
-                    <dt class="col-sm-4">Email</dt>
-                    <dd class="col-sm-8" id="view_email"></dd>
-                    <dt class="col-sm-4">Role</dt>
-                    <dd class="col-sm-8" id="view_role"></dd>
-                </dl>
+                <div class="mb-3">
+                    <label for="view_username" class="form-label"><strong>Username</strong></label>
+                    <p id="view_username"></p>
+                </div>
+                <div class="mb-3">
+                    <label for="view_email" class="form-label"><strong>Email</strong></label>
+                    <p id="view_email"></p>
+                </div>
+                <div class="mb-3">
+                    <label for="view_role" class="form-label"><strong>Role</strong></label>
+                    <p id="view_role"></p>
+                </div>
             </div>
         </div>
     </div>

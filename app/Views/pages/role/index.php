@@ -28,7 +28,7 @@
                                 <td><?= $index + 1 ?></td>
                                 <td><?= esc($role->name) ?></td>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewModal" data-id="<?= $role->id ?>" data-name="<?= esc($role->name) ?>">
+                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewModal" data-id="<?= $role->id ?>" data-name="<?= esc($role->name) ?>">
                                         <i class="bi bi-eye"></i>
                                     </button>
                                     <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" data-id="<?= $role->id ?>" data-name="<?= esc($role->name) ?>">
@@ -59,12 +59,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <dl class="row">
-                    <dt class="col-sm-3">ID</dt>
-                    <dd class="col-sm-9" id="view_id"></dd>
-                    <dt class="col-sm-3">Peran</dt>
-                    <dd class="col-sm-9" id="view_name"></dd>
-                </dl>
+                <div class="mb-3">
+                    <label for="view_name" class="form-label"><strong>Peran</strong></label>
+                    <p id="view_name"></p>
+                </div>
             </div>
         </div>
     </div>
@@ -89,7 +87,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
                 </div>
             </form>
         </div>
@@ -104,10 +102,9 @@
                 <h5 class="modal-title">Tambah Peran Admin Baru</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="<?= route_to('role.store') ?>" method="post">
+            <form action="<?= base_url('roles/add') ?>" method="post">
                 <?= csrf_field(); ?>
-                <div class="modal-body
-                ">
+                <div class="modal-body">
                 <div class="mb-3">
                     <label for="add_name" class="form-label">Peran</label>
                     <input type="text" class="form-control" id="add_name" name="name" required>
@@ -122,7 +119,28 @@
     </div>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Populate View Modal with Role Data
+        $('#viewModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            const id = button.data('id');
+            const name = button.data('name');
 
+            document.getElementById('view_name').textContent = name;
+        });
+
+        // Populate Edit Modal with Role Data
+        $('#editModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            const id = button.data('id');
+            const name = button.data('name');
+
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_name').value = name;
+        });
+    });
+</script>
 
 
 <?= $this->endSection(); ?>

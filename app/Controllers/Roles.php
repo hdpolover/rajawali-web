@@ -29,20 +29,17 @@ class Roles extends BaseController
     {
         // get form data
         $formData = [
-            'name' => $this->request->getPost('add_name'),
-            'url' => $this->request->getPost('add_url'),
-            'icon' => $this->request->getPost('add_icon'),
-            'is_active' => $this->request->getPost('add_is_active'),
+            'name' => $this->request->getPost('name'),
         ];
 
-        // save menu data to database
-        $newMenu =  $this->menuModel->save($formData);
+        // save role data to database
+        $newRole =  $this->roleModel->save($formData);
 
-        if (!$newMenu) {
+        if (!$newRole) {
             // show error message and redirect to the previous page. set alert session data
             session()->setFlashdata('alert', [
                 'type' => 'danger',
-                'message' => 'Gagal menambahkan menu.'
+                'message' => 'Gagal menambahkan peran.'
             ]);
 
             return redirect()->to(previous_url());
@@ -51,8 +48,19 @@ class Roles extends BaseController
         // show success message and redirect to the previous page. set alert session data
         session()->setFlashdata('alert', [
             'type' => 'success',
-            'message' => 'Menu berhasil ditambahkan.'
+            'message' => 'Peran berhasil ditambahkan.'
         ]);
+
+        // add activity log
+        $logData = [
+            'admin_id' => session()->get('admin_id'),
+            'table_name' => 'roles',
+            'action' => 'add',
+            'old_value' => null,
+            'new_value' => $newRole,
+        ];
+
+        $this->activityLogModel->saveActivityLog($logData);
 
         return redirect()->to(previous_url());
     }
@@ -61,20 +69,17 @@ class Roles extends BaseController
     {
         // get form data
         $formData = [
-            'name' => $this->request->getPost('edit_name'),
-            'url' => $this->request->getPost('edit_url'),
-            'icon' => $this->request->getPost('edit_icon'),
-            'is_active' => $this->request->getPost('edit_is_active'),
+            'name' => $this->request->getPost('name'),
         ];
 
-        // save menu data to database
-        $updateMenu =  $this->menuModel->update($id, $formData);
+        // update role data in database
+        $updatedRole = $this->roleModel->update($id, $formData);
 
-        if (!$updateMenu) {
+        if (!$updatedRole) {
             // show error message and redirect to the previous page. set alert session data
             session()->setFlashdata('alert', [
                 'type' => 'danger',
-                'message' => 'Gagal mengubah menu.'
+                'message' => 'Gagal mengubah peran.'
             ]);
 
             return redirect()->to(previous_url());
@@ -83,8 +88,19 @@ class Roles extends BaseController
         // show success message and redirect to the previous page. set alert session data
         session()->setFlashdata('alert', [
             'type' => 'success',
-            'message' => 'Menu berhasil diubah.'
+            'message' => 'Peran berhasil diubah.'
         ]);
+
+        // add activity log
+        $logData = [
+            'admin_id' => session()->get('admin_id'),
+            'table_name' => 'roles',
+            'action' => 'edit',
+            'old_value' => null,
+            'new_value' => $updatedRole,
+        ];
+
+        $this->activityLogModel->saveActivityLog($logData);
 
         return redirect()->to(previous_url());
     }

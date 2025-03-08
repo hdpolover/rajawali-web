@@ -6,129 +6,154 @@
     <div class="card">
         <div class="card-content">
             <div class="card-body cursor-default-hover">
-                <form class="form form-vertical">
+                <form id="saveSaleForm" action="<?= base_url('transactions/sales/save')?>" class="form form-vertical" method="post">
                     <div class="form-body">
-                        <div class="row">
+                        <div class="mb-3">
+                            <label for="customer" class="form-label fw-bold">Tipe Penjualan</label>
+                            <div class="input-group">
+                                <div class="form-check me-3">
+                                    <input class="form-check-input" type="radio" name="sale_type" id="sale_type_complete" value="complete" checked>
+                                    <label class="form-check-label" for="sale_type_complete">
+                                        Penjualan Lengkap
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sale_type" id="sale_type_walkin" value="walkin">
+                                    <label class="form-check-label" for="sale_type_walkin">
+                                        Walk-in (Tanpa detail pelanggan dan servis)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="detailedCForm1">
                             <div class="mb-3">
-                                <label for="add_spare_parts" class="form-label fw-bold">Rincian Spare Part</label>
-                                <div class="d-flex justify-content-end mb-3">
-                                    <button type="button" class="btn btn-primary" id="selectSparePart" data-bs-toggle="modal" data-bs-target="#sparePartModal">
-                                        <i class="bi bi-plus-circle"></i> Pilih Spare Part
+                                <label for="customer" class="form-label fw-bold">Pelanggan</label>
+                                <div class="input-group">
+                                    <select id="select_customer" name="customer" class="form-select">
+                                        <option value="">Pilih Pelanggan</option>
+                                    </select>
+                                    <button type="button" class="btn btn-primary" id="addCustomer" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                                        <i class="bi bi-plus-circle"></i> Tambah Pelanggan
                                     </button>
                                 </div>
-                                <div id="sparePartTable" class="table-responsive">
+                            </div>
+                            <div class="mb-3 d-none" id="motorcycle_div">
+                                <label for="motorbike" class="form-label fw-bold">Motor Pelanggan</label>
+                                <div class="input-group">
+                                    <select id="select_motocycle" name="motorcycle" class="form-select">
+                                        <option value="">Pilih Motor Pelanggan</option>
+                                    </select>
+                                    <button type="button" class="btn btn-primary" id="addMotorbike" data-bs-toggle="modal" data-bs-target="#addMotocycleModal">
+                                        <i class="bi bi-plus-circle"></i> Tambah Motor Pelanggan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="add_spare_parts" class="form-label fw-bold">Rincian Spare Part</label>
+                            <div class="d-flex justify-content-end mb-3">
+                                <button type="button" class="btn btn-primary" id="selectSparePart" data-bs-toggle="modal" data-bs-target="#addSparePartModal">
+                                    <i class="bi bi-plus-circle"></i> Pilih Spare Part
+                                </button>
+                            </div>
+                            <div id="sparePartTable" class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Kode Spare Part</th>
+                                            <th style="width: 40%;">Nama</th>
+                                            <th>Jumlah</th>
+                                            <th>Harga</th>
+                                            <th>Sub Total</th>
+                                            <th>Keterangan</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sparePartsContainer">
+                                        <!-- spare rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="detailedCForm2">
+                            <div class="mb-3">
+                                <label for="add_service" class="form-label fw-bold">Rincian Servis</label>
+                                <div class="d-flex justify-content-end mb-3">
+                                    <button type="button" class="btn btn-primary" id="selectService" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                                        <i class="bi bi-plus-circle"></i> Pilih Servis
+                                    </button>
+                                </div>
+                                <div id="serviceTable" class="table-responsive">
                                     <table class="table table-bordered">
                                         <thead>
                                             <tr>
                                                 <th>#</th>
-                                                <th style="width: 40%;">Spare Part</th>
-                                                <th>Jumlah</th>
+                                                <th style="width: 40%;">Servis</th>
+                                                <th>Mekanik</th>
                                                 <th>Sub Total</th>
+                                                <th>Keterangan</th>
                                                 <th>Aksi</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="sparePartsContainer">
-                                            <!-- spare rows -->
+                                        <tbody id="servicesContainer">
+                                            <!-- service rows -->
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                               
-                            </div>
-                            <div class="mb-3">
-                                <label for="add_purchase_date" class="form-label">Tanggal Pembelian</label>
-                                <input type="date" class="form-control" id="add_purchase_date" name="purchase_date">
-                            </div>
-                            <div class="col-12 d-flex justify-content-end cursor-default-hover">
-                                <button type="submit" class="btn btn-primary me-1 mb-1">Simpan</button>
-                               </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="discount" class="form-label fw-bold">Diskon</label>
+                            <input type="numeric" class="form-control" id="discount" value="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="total" class="form-label fw-bold">Total</label>
+                            <input type="text" class="form-control" id="total" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="note" class="form-label fw-bold">Catatan</label>
+                            <textarea class="form-control" id="note" name="note" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="col-12 d-flex justify-content-end cursor-default-hover">
+                            <button type="submit" class="btn btn-primary me-1 mb-1">Simpan</button>
                         </div>
                     </div>
+
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="sparePartModal" tabindex="-1" aria-labelledby="sparePartModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="sparePartModalLabel">Pilih Spare Part</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="select_spare_part" class="form-label ">Spare Part</label>
-                    <select id="select_spare_part" name="select_spare_part">
-                        <option value=""></option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="quantity" class="form-label">Jumlah</label>
-                    <input type="number" class="form-control" id="quantity" min="1" value="1" step="1">
-                </div>
-                <div class="mt-3 d-flex justify-content-end">
-                    <button type="button" class="btn btn-primary" id="addSparePart" data-bs-dismiss="modal">
-                        Tambahkan
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="modal fade" id="updateSparePartModal" tabindex="-1" aria-labelledby="updateSparePartModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="updateSparePartModalLabel">Update Spare Part</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="update_spare_part" class="form-label">Spare Part</label>
-                    <select id="update_spare_part" name="update_spare_part">
-                        <option value=""></option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="update_quantity" class="form-label">Jumlah</label>
-                    <input type="number" class="form-control" id="update_quantity" min="1" value="1" step="1">
-                </div>
-                <div class="mt-3 d-flex justify-content-end">
-                    <button type="button" class="btn btn-primary" id="updateSparePartBtn" data-bs-dismiss="modal">
-                        Update
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- include Modals from the other folder-->
+<?= $this->include('pages/transactions/sales/components/add_customer'); ?>
+<?= $this->include('pages/transactions/sales/components/add_spare_part'); ?>
+<?= $this->include('pages/transactions/sales/components/add_service'); ?>
+<?= $this->include('pages/transactions/sales/components/add_motorcycle'); ?>
+
 
 <script type="text/javascript">
     jQuery(document).ready(function($) {
-        // spare parts select 2
-        $('#select_spare_part').select2({
-            dropdownParent: $(".modal-body"),
-            // theme
+        // Initialize Select2 for customer select
+        var $customerSelect = $('#select_customer').select2({
             theme: 'bootstrap4',
-            width: '100%',
-            // placeholder
-            placeholder: 'Pilih Spare Part',
+            placeholder: 'Pilih Pelanggan',
             ajax: {
-                url: '<?= site_url('spare-parts/fetch') ?>',
-                // post
+                url: '<?= site_url('customers/fetch') ?>',
                 type: 'POST',
                 dataType: 'json',
                 delay: 250,
                 data: function(params) {
                     return {
-                        name: params.term, // search term
+                        name: params.term,
                     };
                 },
                 processResults: function(response) {
+                    console.log('Customer Select2 Results:', response.data);
                     return {
                         results: response.data
                     };
@@ -137,113 +162,213 @@
             }
         });
 
+        // when customer select has value, show motorcycle select
+        $customerSelect.on('select2:select', function(e) {
+            const data = e.params.data;
+            console.log('Selected Customer:', data);
+
+            // show motorcycle select
+            document.getElementById('motorcycle_div').classList.remove('d-none');
+
+            // motorcycle data
+            const motorcycles = <?= json_encode($motorcycles) ?>;
+
+            // filter motorcycle by customer id
+            const customerMotorcycles = motorcycles.filter(motorcycle => motorcycle.customer_id == data.id);
+
+            // select motorcycle element
+            const selectMotorcycle = document.getElementById('select_motocycle');
+
+            // clear select motorcycle
+            selectMotorcycle.innerHTML = '<option value="">Pilih Motor Pelanggan</option>';
+
+            // add motorcycle to select motorcycle
+            customerMotorcycles.forEach(motorcycle => {
+                const option = document.createElement('option');
+                option.value = motorcycle.id;
+                option.textContent = `${motorcycle.brand} ${motorcycle.model} (${motorcycle.license_number})`;
+                selectMotorcycle.appendChild(option);
+            });
+        });
+
         // add class for select 2 to form-select
         $('.select2-container').addClass('form-select');
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
+    // get all data on submit form
+    $('#saveSaleForm').on('submit', function(e) {
+        e.preventDefault();
+
+        // get all data
+        const saleType = document.querySelector('input[name="sale_type"]:checked').value;
+
+        const customerId = document.getElementById('select_customer').value;
+        const motorcycleId = document.getElementById('select_motocycle').value;
+        const discount = document.getElementById('discount').value;
+        const note = document.getElementById('note').value;
+
+        // get spare parts data
         const sparePartsContainer = document.getElementById('sparePartsContainer');
-        const sparePartTable = document.getElementById('sparePartTable');
-        const selectSparePart = document.getElementById('selectSparePart');
-        const addSparePart = document.getElementById('addSparePart');
-        const quantity = document.getElementById('quantity');
-        const selectSparePartElement = document.getElementById('select_spare_part');
+        const sparePartData = <?= json_encode($spare_parts) ?>;
 
-        selectSparePart.addEventListener('click', function() {
-            selectSparePartElement.value = '';
-            quantity.value = 1;
-        });
-
-        addSparePart.addEventListener('click', function() {
-            // check if spare part already selected
-            for (let i = 0; i < sparePartsContainer.rows.length; i++) {
-                const row = sparePartsContainer.rows[i];
-                const sparePart = row.cells[1].textContent;
-                if (sparePart == selectSparePartElement.options[selectSparePartElement.selectedIndex].text) {
-                    alert('Spare part sudah dipilih');
-                    return;
-                }
-            }
-
-            const sparePart = selectSparePartElement.options[selectSparePartElement.selectedIndex].text;
-            const sparePartId = selectSparePartElement.value;
-            const qty = quantity.value;
-
-            const sparePartData = <?= json_encode($spare_parts) ?>;
-
-            const spare_part = sparePartData.find(spare_part => spare_part.id == sparePartId);
-
-            // get sub total from price and quantity
-            const subTotal = spare_part.details.current_sell_price * qty;
-
-            if (sparePartId) {
-                const row = sparePartsContainer.insertRow();
-                row.innerHTML = `
-                    <td>${sparePartsContainer.rows.length}</td>
-                    <td>${sparePart}</td>
-                    <td>${qty}</td>
-                    <td>${formatCurrencyID(subTotal)}</td>
-                    <td>
-                        <button type="button" class="btn btn-warning btn-sm" onclick="updateSparePart(this)">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeSparePart(this)">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                `;
-            }
-
-            selectSparePartElement.value = '';
-            quantity.value = 1;
-        });
-
-        // remove spare part row
-        window.removeSparePart = function(button) {
-            const row = button.closest('tr');
-            row.remove();
-
-            // update row number
-            for (let i = 0; i < sparePartsContainer.rows.length; i++) {
-                sparePartsContainer.rows[i].cells[0].textContent = i + 1;
-            }
-        };
-
-        // update spare part row
-        window.updateSparePart = function(button) {
-            const row = button.closest('tr');
-            const sparePart = row.cells[1].textContent;
-            const qty = row.cells[2].textContent;
-
-            const sparePartId = <?= json_encode($spare_parts) ?>.find(spare_part => spare_part.name == sparePart).id;
-
-            const updateSparePartElement = document.getElementById('update_spare_part');
-
-            // set selected spare part
-            updateSparePartElement.value = sparePartId;
-            document.getElementById('update_quantity').value = qty;
-
-            $('#updateSparePartModal').modal('show');
-
-            // when update button clicked, update spare part row
-            document.getElementById('updateSparePartBtn').addEventListener('click', function() {
-                const updatedSparePart = updateSparePartElement.options[updateSparePartElement.selectedIndex].text;
-                const updatedQty = document.getElementById('update_quantity').value;
-
-                // get sub total from price and quantity
-                const sparePartData = <?= json_encode($spare_parts) ?>;
-                const spare_part = sparePartData.find(spare_part => spare_part.id == sparePartId);
-                const subTotal = spare_part.details.current_sell_price * updatedQty;
-
-                row.cells[1].textContent = updatedSparePart;
-                row.cells[2].textContent = updatedQty;
-                row.cells[3].textContent = formatCurrencyID(subTotal);
-
-                $('#updateSparePartModal').modal('hide');
+        const spareParts = [];
+        for (let i = 0; i < sparePartsContainer.rows.length; i++) {
+            const row = sparePartsContainer.rows[i];
+            // get spare part id from spare part code_number
+            const sparePartId = sparePartData.find(sparePart => sparePart.code_number == row.cells[1].textContent).id;
+            const quantity = row.cells[3].textContent;
+            const price = revertCurrencyID(row.cells[4].textContent);
+            const subTotal = revertCurrencyID(row.cells[5].textContent);
+            const description = row.cells[6].textContent;
+            spareParts.push({
+                spare_part_id: sparePartId,
+                quantity: quantity,
+                price: price,
+                sub_total: subTotal,
+                description: description,
             });
+        }
 
-        };
+        // get services data
+        const servicesContainer = document.getElementById('servicesContainer');
+        const serviceData = <?= json_encode($services) ?>;
+        const mechanicData = <?= json_encode($mechanics) ?>;
+        const services = [];
+        for (let i = 0; i < servicesContainer.rows.length; i++) {
+            const row = servicesContainer.rows[i];
+            // get service id from service name
+            const serviceId =  serviceData.find(service => service.name == row.cells[1].textContent).id;
+            // get mechanic id from mechanic name
+            const mechanicId = mechanicData.find(mechanic => mechanic.name == row.cells[2].textContent).id;
+            const description = row.cells[4].textContent;
+            const price = revertCurrencyID(row.cells[3].textContent);
+            services.push({
+                service_id: serviceId,
+                mechanic_id: mechanicId,
+                description: description,
+                price: price,
+                sub_total: price,
+            });
+        }
+
+        // create form data
+        const formData = new FormData();
+        // sale type
+        formData.append('sale_type', saleType); 
+        // transaction date is current date time
+        formData.append('sale_date', '<?= date('Y-m-d H:i:s') ?>');
+        // generate sale number with date time in milisecond
+        const saleNumber = '<?= date('YmdHis') ?>';
+        formData.append('sale_number', saleNumber);
+        formData.append('customer_id', customerId);
+        formData.append('motorcycle_id', motorcycleId);
+        formData.append('discount', discount);
+        formData.append('description', note);
+        formData.append('spare_parts', JSON.stringify(spareParts));
+        formData.append('services', JSON.stringify(services));
+        // admin id
+        formData.append('admin_id', '<?= session()->get('admin_id') ?>');
+        // total price
+        const totalPrice = document.getElementById('total').value;
+        formData.append('total', revertCurrencyID(totalPrice));
+
+        // send ajax request
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                console.log(response);
+                if (response.status == 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: response.message
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '<?= base_url('transactions/sales') ?>';
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr, status, error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan saat menyimpan data'
+                });
+            }
+        });
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // total
+        const total = document.getElementById('total');
+        // discount
+        const discount = document.getElementById('discount');
+        // note
+        const note = document.getElementById('note');
+
+        // radio button
+        const saleTypeComplete = document.getElementById('sale_type_complete');
+        const saleTypeWalkin = document.getElementById('sale_type_walkin');
+
+        // radio button event
+        saleTypeComplete.addEventListener('change', function() {
+            document.getElementById('detailedCForm1').style.display = 'block';
+            document.getElementById('detailedCForm2').style.display = 'block';
+        });
+
+        saleTypeWalkin.addEventListener('change', function() {
+            document.getElementById('detailedCForm1').style.display = 'none';
+            document.getElementById('detailedCForm2').style.display = 'none';
+
+            // update total
+            calculateTotal();
+        });
+
+        // total calculation
+        discount.addEventListener('input', function() {
+            calculateTotal();
+        });
+
+
+    });
+
+    // calculate total
+    function calculateTotal() {
+        const sparePartsContainer = document.getElementById('sparePartsContainer');
+        const servicesContainer = document.getElementById('servicesContainer');
+        const discount = document.getElementById('discount');
+        const total = document.getElementById('total');
+
+        let subTotal = 0;
+        for (let i = 0; i < sparePartsContainer.rows.length; i++) {
+            const row = sparePartsContainer.rows[i];
+            const subTotalValue = row.cells[5].textContent;
+            subTotal += parseInt(subTotalValue.replace(/\D/g, ''));
+        }
+
+        for (let i = 0; i < servicesContainer.rows.length; i++) {
+            const row = servicesContainer.rows[i];
+            const subTotalValue = row.cells[3].textContent;
+            subTotal += parseInt(subTotalValue.replace(/\D/g, ''));
+        }
+
+        const discountValue = parseInt(discount.value);
+        const totalValue = subTotal - discountValue;
+
+        total.value = formatCurrencyID(totalValue);
+    }
 </script>
 
 <?= $this->endSection() ?>

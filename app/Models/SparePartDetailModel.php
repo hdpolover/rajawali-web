@@ -3,7 +3,6 @@
 
 namespace App\Models;
 
-use App\Entities\SparePartDetail;
 use CodeIgniter\Model;
 
 class SparePartDetailModel extends Model
@@ -11,7 +10,7 @@ class SparePartDetailModel extends Model
     protected $table = 'spare_part_details';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType = SparePartDetail::class;
+    protected $returnType = 'object';
     protected $allowedFields = [
         'spare_part_id',
         'current_stock',
@@ -50,4 +49,23 @@ class SparePartDetailModel extends Model
             'decimal' => 'Field ini harus berupa angka desimal',
         ],
     ];
+
+    // update stock
+    public function updateStock($sparePartid, $stock)
+    {
+        // find spare part detail by spare part id
+        $sparePartDetail = $this->where('spare_part_id', $sparePartid)->first();
+
+        // spare part detail id
+        $id = $sparePartDetail->id;
+
+        // get current stock
+        $currentStock = $sparePartDetail->current_stock;
+
+        // subtract stock
+        $newStock = $currentStock - $stock;
+
+        // update stock
+        $this->update($id, ['current_stock' => $newStock]);
+    }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Entities\ServiceSale;
 use CodeIgniter\Model;
 
 class ServiceSaleModel extends Model
@@ -10,7 +9,11 @@ class ServiceSaleModel extends Model
     protected $table = 'service_sales';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType = ServiceSale::class;
+    protected $returnType = 'object';
+
+    protected $useTimestamps = true;
+    protected $createdField = 'created_at';
+    protected $updatedField = 'updated_at';
 
     protected $allowedFields = [
         'sale_id',

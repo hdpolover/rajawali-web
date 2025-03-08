@@ -18,7 +18,7 @@ class Services extends BaseController
     {
         $data = [
             'title'       => 'Data Servis',
-            'services' => $this->serviceModel->get_service_with_prices(),
+            'services' => $this->serviceModel->getServices(),
         ];
 
         return $this->render('pages/service/index', $data);
@@ -73,4 +73,36 @@ class Services extends BaseController
         }
     }
 
+    // fetch
+    public function fetch()
+    {
+        $response = array();
+
+        $searchTerm = $this->request->getPost('name');
+
+        if ($searchTerm) {
+            $services = $this->serviceModel->select('id,name')
+                ->like('name', $searchTerm)
+                ->orderBy('name')
+                ->getServices();
+        } else {
+            $services = $this->serviceModel->getServices();
+        }
+
+        // return data as data with id and name
+        $data = [];
+
+        foreach ($services as $service) {
+            $data[] = [
+                // convert id to int
+                'id' => (int)$service->id,
+                'text' => $service->name,
+            ];
+        }
+
+        $response['data'] = $data;
+
+        return $this->response->setJSON($response);
+        
+    }
 }

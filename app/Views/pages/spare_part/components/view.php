@@ -33,11 +33,11 @@
                             <p id="view_stock"></p>
                         </div>
                         <div class="mb-3">
-                            <label for="view_sell_price" class="form-label"><strong>Harga Jual</strong></label>
+                            <label for="view_sell_price" class="form-label"><strong>Harga Jual Sekarang</strong></label>
                             <p id="view_sell_price"></p>
                         </div>
                         <div class="mb-3">
-                            <label for="view_buy_price" class="form-label"><strong>Harga Beli</strong></label>
+                            <label for="view_buy_price" class="form-label"><strong>Harga Beli Sekarang</strong></label>
                             <p id="view_buy_price"></p>
                         </div>
                     </div>
@@ -73,7 +73,7 @@
 <script>
     // get price history by spare part id
     function getPriceHistory(id) {
-        return fetch(`<?= base_url('spare-parts/price-history/') ?>${id}`)
+        return fetch(`<?= base_url('master-data/spare-parts/price-history/') ?>${id}`)
             .then(response => response.json())
             .then(data => data);
     }

@@ -46,16 +46,30 @@ class ServiceModel extends Model
     ];
 
     // get service prices
-    public function get_service_with_prices()
+    public function getServices()
     {
-        $service_prices = new ServicePriceModel();
+        $builder = $this->db->table('services');
+        $builder->select('services.*');
 
-        $services = $this->findAll();
+        // get services
+        $servicesResult = $builder->get()->getResult();
 
-        foreach ($services as $service) {
-            $service->prices = $service_prices->where('service_id', $service->id)->findAll();
+        $services = [];
+
+        // loop through services
+        foreach ($servicesResult as $service) {
+
+            // get service prices
+            $servicePriceModel = new ServicePriceModel();
+
+            $servicePrices = $servicePriceModel->where('service_id', $service->id)->findAll();
+
+            $service->prices =$servicePrices;
+
+            $services[] = $service;
         }
 
         return $services;
+
     }
 }

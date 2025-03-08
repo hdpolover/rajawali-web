@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Entities\SparePartSaleDetail;
+
 use CodeIgniter\Model;
 
 class SparePartSaleDetailModel extends Model
@@ -10,7 +10,11 @@ class SparePartSaleDetailModel extends Model
     protected $table = 'spare_part_sale_details';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType = SparePartSaleDetail::class;
+    protected $returnType = 'object';
+
+    protected $useTimestamps = true;
+    protected $createdField = 'created_at';
+    protected $updatedField = 'updated_at';
 
     protected $allowedFields = [
         'spare_part_sale_id',

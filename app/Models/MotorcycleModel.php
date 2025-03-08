@@ -44,4 +44,26 @@ class MotorcycleModel extends Model
             'required' => 'Nomor plat harus diisi'
         ]
     ];
+
+    public function getMotorcycles()
+    {
+        $builder = $this->db->table('motorcycles');
+        $builder->select('motorcycles.*');
+
+        $result = $builder->get()->getResult();
+
+        $motorcycles = [];
+
+        foreach ($result as $motorcycle) {
+            $customerModel = new CustomerModel();
+            $customer = $customerModel->find($motorcycle->customer_id);
+            
+            // Add customer as a property to the motorcycle object
+            $motorcycle->customer = $customer;
+
+            $motorcycles[] = $motorcycle;
+        }
+
+        return $motorcycles;
+    }
 }

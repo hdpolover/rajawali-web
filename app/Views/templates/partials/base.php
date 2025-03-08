@@ -10,7 +10,7 @@
 
     <link rel="shortcut icon" href="<?= base_url('mazer/assets/compiled/svg/favicon.svg') ?>" type="image/x-icon">
     <link rel="stylesheet" href="<?= base_url('mazer/assets/compiled/css/app.css') ?>">
-    <!-- <link rel="stylesheet" href="<?= base_url('mazer/assets/compiled/css/app-dark.css') ?>"> -->
+    <link rel="stylesheet" href="<?= base_url('mazer/assets/compiled/css/app-dark.css') ?>">
 
     <link rel="stylesheet"
         href="<?= base_url("mazer/assets/extensions/datatables.net-bs5/css/dataTables.bootstrap5.min.css") ?>" />
@@ -20,8 +20,8 @@
     <!-- Select2 CSS -->
     <link rel="stylesheet" type="text/css" href="/select2/dist/css/select2.min.css" />
 
-     <!-- Select2 JS -->
-     <script type="text/javascript" src="/jquery-3.7.1.min.js"></script>
+    <!-- Select2 JS -->
+    <script type="text/javascript" src="/jquery-3.7.1.min.js"></script>
 
     <!-- Select2 JS -->
     <script type="text/javascript" src="/select2/dist/js/select2.min.js"></script>
@@ -37,6 +37,36 @@
 
     <!-- Include JsBarcode -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .sidebar-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar-menu {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-footer {
+            flex-shrink: 0;
+        }
+    </style>
+
 </head>
 
 <body>
@@ -103,9 +133,48 @@
     <script>
         // Get current URL for menu highlighting
         window.currentUrl = '<?= current_url() ?>';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeLink = document.getElementById('theme-link');
+            const themeLinkDark = document.getElementById('theme-link-dark');
+
+            // Function to set the theme
+            function setTheme(theme) {
+                if (theme === 'dark') {
+                    themeLink.disabled = true;
+                    themeLinkDark.disabled = false;
+                } else {
+                    themeLink.disabled = false;
+                    themeLinkDark.disabled = true;
+                }
+            }
+
+            // Detect system preference for light or dark mode
+            const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+            // Apply the preferred theme
+            if (prefersDarkScheme.matches) {
+                setTheme('dark');
+            } else {
+                setTheme('light');
+            }
+
+            // Listen for changes in the system preference
+            prefersDarkScheme.addEventListener('change', function(e) {
+                setTheme(e.matches ? 'dark' : 'light');
+            });
+
+            // Toggle theme manually
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = themeLink.disabled ? 'dark' : 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                setTheme(newTheme);
+            });
+        });
     </script>
 
-<?= $this->include('templates/js/helper_functions') ?>
+    <?= $this->include('templates/js/helper_functions') ?>
 
     <?= $this->renderSection('js') ?>
 </body>
