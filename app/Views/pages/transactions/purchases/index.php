@@ -2,10 +2,17 @@
 
 <?= $this->section('content') ?>
 <div class="page-content">
+    <?php if(session()->getFlashdata('alert')): ?>
+        <div class="alert alert-<?= session()->getFlashdata('alert')['type'] ?> alert-dismissible fade show" role="alert">
+            <?= session()->getFlashdata('alert')['message'] ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="row mb-4">
         <div class="col-12 text-end">
             <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#archiveModal">
-                <i class="bi bi-archive"></i>
+                <i class="bi bi-archive"></i> Arsip
             </button>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
                 <i class="bi bi-plus"></i> Pembelian Spare Part Baru
@@ -54,7 +61,7 @@
                                 <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewModal" data-id="<?= $purchase->id ?>">
                                     <i class="bi bi-eye"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" data-purchase="<?= json_encode($purchase) ?>">
+                                <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" data-purchase="<?= htmlspecialchars(json_encode($purchase), ENT_QUOTES, 'UTF-8') ?>">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?= $purchase->id ?>">
@@ -70,7 +77,22 @@
     </div>
 </div>
 
-<?= $this->include('pages/transactions/purchases/components/view'); ?>
-<?= $this->include('pages/transactions/purchases/components/add'); ?>
+<!-- Include all modal components -->
+<?= $this->include('pages/transactions/purchases/components/view') ?>
+<?= $this->include('pages/transactions/purchases/components/add') ?>
+<?= $this->include('pages/transactions/purchases/components/edit') ?>
+<?= $this->include('pages/transactions/purchases/components/delete') ?>
+<?= $this->include('pages/transactions/purchases/components/archive') ?>
 
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#table1').DataTable({
+            responsive: true,
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json"
+            }
+        });
+    });
+</script>
 <?= $this->endSection() ?>

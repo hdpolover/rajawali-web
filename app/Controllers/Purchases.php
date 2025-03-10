@@ -56,8 +56,8 @@ class Purchases extends BaseController
             $spareParts[] = [
                 'spare_part_id' => $sparePartId,
                 'quantity' => $formData['quantities'][$index],
-                'sell_price' => $formData['sell_prices'][$index],
-                'buy_price' => $formData['buy_prices'][$index],
+                'sell_price' => floatval($formData['sell_prices'][$index]), // Convert to float to ensure it's not null
+                'buy_price' => floatval($formData['buy_prices'][$index]),   // Convert to float to ensure it's not null
                 'sub_total' => $formData['sub_totals'][$index],
             ];
         }
@@ -84,7 +84,7 @@ class Purchases extends BaseController
              $logData = [
                 'admin_id' => session()->get('admin_id'),
                 'table_name' => 'purchases',
-                'action' => 'add',
+                'action_type' => 'add',
                 'old_value' => null,
                 'new_value' => $purchaseId,
             ];

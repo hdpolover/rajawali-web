@@ -43,14 +43,15 @@
                                 <label for="description" class="form-label fw-bold">Deskripsi</label>
                                 <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
                             </div>
-                            <!-- <div class="mb-3">
+                            <div class="mb-3">
                                 <label for="photo" class="form-label fw-bold">Foto Spare Part</label>
-                                <img id="photoPreview" src="<?= STORAGE_URL . 'spare_parts/default.jpg' ?>" alt="Preview Foto" style="max-height: 500px; max-width: auto; margin: 10px; display: block; margin-left: auto; margin-right: auto; padding: 10px;">
+                                <img id="photoPreview" src="<?= STORAGE_URL . 'spare_parts/default.jpg' ?>" alt="Preview Foto" style="max-height: 500px; max-width: 100%; margin: 10px 0; display: block; padding: 10px; border: 1px dashed #ccc;">
                                 <div class="input-group">
-                                    <input type="file" class="form-control" id="photo" name="photo" accept="image/*" required>
+                                    <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
                                     <button type="button" class="btn btn-secondary" id="takeFromCameraButton">Ambil dari Kamera</button>
                                 </div>
-                            </div> -->
+                                <small class="form-text text-muted">Foto akan diunggah ke server FTP</small>
+                            </div>
                             <div class="mb-3">
                                 <label for="initialStock" class="form-label fw-bold">Stok Awal</label>
                                 <input type="number" class="form-control" id="initialStock" name="initialStock" required>
@@ -276,16 +277,20 @@
                         document.getElementById('photoPreview').src = dataUrl;
                         document.getElementById('photoPreview').style.display = 'block';
 
-                        // add the image to the file input
-                        const blob = dataURItoBlob(dataUrl);
-                        const newTimestampName = new Date().getTime();
-                        const file = new File([blob], newTimestampName + '.png', {
-                            type: 'image/png'
-                        });
+                        // Create a hidden input field for the base64 image data
+                        let hiddenInput = document.getElementById('hiddenPhotoData');
+                        if (!hiddenInput) {
+                            hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.id = 'hiddenPhotoData';
+                            hiddenInput.name = 'photo';
+                            document.getElementById('saveSaleForm').appendChild(hiddenInput);
+                        }
+                        hiddenInput.value = dataUrl;
 
-                        const dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(file);
-                        document.getElementById('photo').files = dataTransfer.files;
+                        // Disable the file input to avoid conflicts
+                        document.getElementById('photo').value = '';
+                        document.getElementById('photo').disabled = true;
 
                         stream.getTracks().forEach(track => track.stop());
                         cameraModal.hide();

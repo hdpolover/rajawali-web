@@ -152,11 +152,8 @@ class PurchaseModel extends Model
 
     function savePurchase($data)
     {
-        // create a new purchase entity
-        $purchase = new PurchaseModel($data);
-
         // save the purchase
-        $this->save($purchase);
+        $this->save($data);
 
         // get the purchase id
         $purchaseId = $this->insertID();

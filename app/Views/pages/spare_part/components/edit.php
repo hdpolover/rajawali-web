@@ -1,6 +1,6 @@
 <!-- Edit Spare Part Modal -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Spare Part</h5>
@@ -9,42 +9,56 @@
             <form id="editSparePartForm" method="POST" action="<?= base_url('master-data/spare-parts/edit') ?>" enctype="multipart/form-data">
                 <div class="modal-body">
                     <input type="hidden" id="edit_id" name="id">
-                    <div class="mb-3">
-                        <label for="edit_code_number" class="form-label">Kode Barcode</label>
-                        <input type="text" class="form-control" id="edit_code_number" name="code_number" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_name" class="form-label">Nama Spare Part</label>
-                        <input type="text" class="form-control" id="edit_name" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_merk" class="form-label">Merk</label>
-                        <input type="text" class="form-control" id="edit_merk" name="merk">
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_description" class="form-label">Deskripsi</label>
-                        <textarea class="form-control" id="edit_description" name="description" rows="3" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_type" class="form-label">Tipe Spare Part</label>
-                        <select class="form-select" id="edit_type" name="type" required>
-                            <option value="">Pilih Tipe Spare Part</option>
-                            <?php foreach ($spare_part_types as $type) : ?>
-                                <option value="<?= esc($type->id) ?>"><?= esc($type->name) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_stock" class="form-label">Stok</label>
-                        <input type="number" class="form-control" id="edit_stock" name="stock" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_sell_price" class="form-label">Harga Jual</label>
-                        <input type="number" class="form-control" id="edit_sell_price" name="sell_price" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_buy_price" class="form-label">Harga Beli</label>
-                        <input type="number" class="form-control" id="edit_buy_price" name="buy_price" required>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_code_number" class="form-label">Kode Barcode</label>
+                                <input type="text" class="form-control" id="edit_code_number" name="code_number" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_name" class="form-label">Nama Spare Part</label>
+                                <input type="text" class="form-control" id="edit_name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_merk" class="form-label">Merk</label>
+                                <input type="text" class="form-control" id="edit_merk" name="merk">
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_description" class="form-label">Deskripsi</label>
+                                <textarea class="form-control" id="edit_description" name="description" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_type" class="form-label">Tipe Spare Part</label>
+                                <select class="form-select" id="edit_type" name="type" required>
+                                    <option value="">Pilih Tipe Spare Part</option>
+                                    <?php foreach ($spare_part_types as $type) : ?>
+                                        <option value="<?= esc($type->id) ?>"><?= esc($type->name) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_photo" class="form-label">Foto Spare Part</label>
+                                <img id="edit_photo_preview" src="" alt="Preview Foto" style="max-height: 200px; max-width: 100%; margin: 10px 0; display: block; padding: 10px; border: 1px dashed #ccc;">
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="edit_photo" name="photo" accept="image/*">
+                                </div>
+                                <small class="form-text text-muted">Unggah foto baru untuk mengganti foto lama (opsional). Foto akan diunggah ke server FTP.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_stock" class="form-label">Stok</label>
+                                <input type="number" class="form-control" id="edit_stock" name="stock" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_sell_price" class="form-label">Harga Jual</label>
+                                <input type="number" class="form-control" id="edit_sell_price" name="sell_price" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_buy_price" class="form-label">Harga Beli</label>
+                                <input type="number" class="form-control" id="edit_buy_price" name="buy_price" required>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -76,6 +90,22 @@
             modal.find('#edit_stock').val(spare_part.details.current_stock);
             modal.find('#edit_sell_price').val(spare_part.details.current_sell_price);
             modal.find('#edit_buy_price').val(spare_part.details.current_buy_price);
+            
+            // Set photo preview
+            var photoUrl = '<?= STORAGE_URL ?>' + 'spare_parts/' + spare_part.photo;
+            modal.find('#edit_photo_preview').attr('src', photoUrl);
+        });
+        
+        // Preview uploaded image before form submission
+        $('#edit_photo').on('change', function() {
+            var file = this.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#edit_photo_preview').attr('src', e.target.result);
+                }
+                reader.readAsDataURL(file);
+            }
         });
     });
 </script>

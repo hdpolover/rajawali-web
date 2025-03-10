@@ -14,6 +14,8 @@ use App\Models\ServiceSaleDetailModel;
 use App\Models\SparePartDetailModel;
 use App\Models\SalePaymentModel;
 use App\Models\SalePaymentDetailModel;
+use App\Models\CustomerModel;
+use App\Models\ActivityLogModel;
 
 class Sales extends BaseController
 {
@@ -29,6 +31,7 @@ class Sales extends BaseController
     protected $sparePartDetailModel;
     protected $salePaymentModel;
     protected $salePaymentDetailModel;
+    protected $customerModel;
 
     public function __construct()
     {
@@ -56,6 +59,9 @@ class Sales extends BaseController
         $this->salePaymentModel = new SalePaymentModel();
         // Load the sale payment detail model
         $this->salePaymentDetailModel = new SalePaymentDetailModel();
+        // Load the customer model
+        $this->customerModel = new CustomerModel();
+        // Activity log model is already initialized in BaseController
     }
 
     public function index()
@@ -622,6 +628,72 @@ class Sales extends BaseController
             'status' => 'success',
             'message' => 'Data penjualan berhasil dihapus'
         ]);
+    }
+    
+    /**
+     * View sale details
+     */
+    public function view($id = null)
+    {
+        if (!$id || !is_numeric($id)) {
+            session()->setFlashdata('alert', [
+                'type' => 'error',
+                'message' => 'ID penjualan tidak valid'
+            ]);
+            return redirect()->to('/transactions/sales');
+        }
+        
+        // Get sale details
+        $sale = $this->saleModel->getSales($id);
+        
+        if (!$sale) {
+            session()->setFlashdata('alert', [
+                'type' => 'error',
+                'message' => 'Data penjualan tidak ditemukan'
+            ]);
+            return redirect()->to('/transactions/sales');
+        }
+        
+        $data = [
+            'title' => 'Detail Penjualan',
+            'sale' => $sale,
+            'customers' => $this->customerModel->findAll(),
+            'motorcycles' => $this->motorcycleModel->getMotorcycles(),
+        ];
+        
+        return $this->render('pages/transactions/sales/view', $data);
+    }
+    
+    /**
+     * Generate invoice for printing
+     */
+    public function invoice($id = null)
+    {
+        if (!$id || !is_numeric($id)) {
+            session()->setFlashdata('alert', [
+                'type' => 'error',
+                'message' => 'ID penjualan tidak valid'
+            ]);
+            return redirect()->to('/transactions/sales');
+        }
+        
+        // Get sale details
+        $sale = $this->saleModel->getSales($id);
+        
+        if (!$sale) {
+            session()->setFlashdata('alert', [
+                'type' => 'error',
+                'message' => 'Data penjualan tidak ditemukan'
+            ]);
+            return redirect()->to('/transactions/sales');
+        }
+        
+        $data = [
+            'title' => 'Invoice Penjualan',
+            'sale' => $sale
+        ];
+        
+        return $this->render('pages/transactions/sales/invoice', $data);
     }
     
     /**

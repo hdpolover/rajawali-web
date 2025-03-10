@@ -161,7 +161,7 @@ class DashboardModel extends Model
         $builder->select('sp.id, sp.name, sp.code_number, spd.current_stock, spd.current_buy_price');
         $builder->join('spare_part_details as spd', 'sp.id = spd.spare_part_id', 'left');
         $builder->where('spd.current_stock <=', $threshold);
-        $builder->where('spd.current_stock >', 0); // Exclude out of stock items
+        // $builder->where('spd.current_stock >', 0); // Exclude out of stock items
         $builder->orderBy('spd.current_stock', 'ASC');
         $builder->limit(10);
         

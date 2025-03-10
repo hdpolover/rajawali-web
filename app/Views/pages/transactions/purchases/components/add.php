@@ -2,103 +2,132 @@
 <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl"> <!-- Changed to modal-xl class for extra large width -->
         <div class="modal-content">
-            <form action="<?= base_url('transactions/purchases/add') ?>" method="post">
+            <form action="<?= base_url('transactions/purchases/add') ?>" method="post" id="purchaseForm">
                 <div class="modal-header">
                     <h5 class="modal-title">Tambah Pembelian Spare Part Baru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="add_supplier_id" class="form-label ">Supplier</label>
-                        <select id="select_supplier" name="select_supplier">
-                            <option value=""></option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="add_purchase_date" class="form-label">Tanggal Pembelian</label>
-                        <input type="date" class="form-control" id="add_purchase_date" name="purchase_date">
-                    </div>
-                    <div class="mb-3">
-                        <label for="add_status" class="form-label">Status</label>
-                        <select class="form-select" id="add_status" name="status">
-                            <option selected disabled>Pilih Status</option>
-                            <option value="0">Pending</option>
-                            <option value="1">Selesai</option>
-                            <option value="2">Gagal</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="add_description" class="form-label">Deskripsi</label>
-                        <textarea class="form-control" id="add_description" name="description" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="add_spare_parts" class="form-label">Rincian Spare Part</label>
-                        <div class="mb-3 d-flex align-items-center">
-                            <select id="select_spare_part" name="select_spare_part">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="select_supplier" class="form-label">Supplier</label>
+                            <select id="select_supplier" name="select_supplier" class="form-select" required>
                                 <option value=""></option>
                             </select>
-                            <button  type="button" class="btn btn-success" id="addSparePart">Tambah</button>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add_purchase_date" class="form-label">Tanggal Pembelian</label>
+                            <input type="date" class="form-control" id="add_purchase_date" name="purchase_date" value="<?= date('Y-m-d') ?>" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="add_status" class="form-label">Status</label>
+                            <select class="form-select" id="add_status" name="status" required>
+                                <option value="" disabled>Pilih Status</option>
+                                <option value="0" selected>Pending</option>
+                                <option value="1">Selesai</option>
+                                <option value="2">Gagal</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add_description" class="form-label">Deskripsi</label>
+                            <textarea class="form-control" id="add_description" name="description" rows="2"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="add_spare_parts" class="form-label">Rincian Spare Part</label>
+                        <div class="mb-3 d-flex gap-2 align-items-center">
+                            <div style="flex: 1;">
+                                <select id="select_spare_part" name="select_spare_part" class="form-select">
+                                    <option value=""></option>
+                                </select>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <button type="button" class="btn btn-success" id="addSparePart">
+                                    <i class="bi bi-plus"></i> Tambah
+                                </button>
+                            </div>
                         </div>
                         <div id="sparePartTable" class="table-responsive">
                             <table class="table table-bordered">
                                 <thead>
-                                    <tr>
-                                        <th style="width: 40%;">Spare Part</th>
-                                        <th>Jumlah</th>
-                                        <th>Harga Jual</th>
-                                        <th>Harga Beli</th>
-                                        <th>Sub Total</th>
-                                        <th>Aksi</th>
+                                    <tr class="table-light">
+                                        <th style="width: 35%;">Spare Part</th>
+                                        <th style="width: 10%;">Jumlah</th>
+                                        <th style="width: 15%;">Harga Beli</th>
+                                        <th style="width: 15%;">Harga Jual</th>
+                                        <th style="width: 15%;">Sub Total</th>
+                                        <th style="width: 10%;">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="noSparePart" style="display: none;">
-                                    <tr>
-                                        <td colspan="5" class="text-center">Tidak ada spare part</td>
-                                    </tr>
-                                </tbody>
                                 <tbody id="sparePartsContainer">
-                                   <!-- spare rows -->
+                                   <!-- spare part rows will be added here -->
                                 </tbody>
+                                <tfoot>
+                                    <tr class="table-light">
+                                        <th colspan="4" class="text-end">Total:</th>
+                                        <th colspan="2">
+                                            <input type="text" class="form-control" id="display_total" readonly>
+                                            <input type="hidden" id="add_total" name="total" value="0">
+                                        </th>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
+                        <div id="noSparePartMessage" class="alert alert-warning mt-2">
+                            <i class="bi bi-exclamation-triangle"></i> Belum ada spare part yang ditambahkan
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="add_total" class="form-label">Total</label>
-                        <input type="number" class="form-control" id="add_total" name="total">
-                    </div>
+                    
                     <hr>
-                    <div class="mb-3">
-                        <label for="add_payment_method" class="form-label">Metode Pembayaran</label>
-                        <select class="form-select" id="add_payment_method" name="payment_method">
-                            <option selected disabled>Pilih Metode Pembayaran</option>
-                            <option value="cash">Cash</option>
-                            <option value="transfer">Transfer</option>
-                        </select>
+                    <h5>Informasi Pembayaran</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="add_payment_method" class="form-label">Metode Pembayaran</label>
+                            <select class="form-select" id="add_payment_method" name="payment_method" required>
+                                <option value="" disabled selected>Pilih Metode Pembayaran</option>
+                                <option value="cash">Cash</option>
+                                <option value="transfer">Transfer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add_payment_date" class="form-label">Tanggal Pembayaran</label>
+                            <input type="date" class="form-control" id="add_payment_date" name="payment_date" value="<?= date('Y-m-d') ?>" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="add_payment_amount" class="form-label">Jumlah Pembayaran</label>
-                        <input type="number" class="form-control" id="add_payment_amount" name="payment_amount" step="1">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="add_payment_amount" class="form-label">Jumlah Pembayaran</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="number" class="form-control" id="add_payment_amount" name="payment_amount" step="1" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add_payment_status" class="form-label">Status Pembayaran</label>
+                            <select class="form-select" id="add_payment_status" name="payment_status" required>
+                                <option value="" disabled selected>Pilih Status Pembayaran</option>
+                                <option value="paid">Sudah Dibayar</option>
+                                <option value="unpaid">Belum Dibayar</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="add_payment_date" class="form-label">Tanggal Pembayaran</label>
-                        <input type="date" class="form-control" id="add_payment_date" name="payment_date">
-                    </div>
-                    <div class="mb-3">
-                        <label for="add_payment_status" class="form-label">Status Pembayaran</label>
-                        <select class="form-select" id="add_payment_status" name="payment_status">
-                            <option selected disabled>Pilih Status Pembayaran</option>
-                            <option value="paid">Sudah Dibayar</option>
-                            <option value="unpaid">Belum Dibayar</option>
-                        </select>
-                    </div>
+                    
                     <div class="mb-3">
                         <label for="add_payment_description" class="form-label">Catatan Pembayaran</label>
-                        <textarea class="form-control" id="add_payment_description" name="payment_description" rows="3"></textarea>
+                        <textarea class="form-control" id="add_payment_description" name="payment_description" rows="2"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <button type="submit" class="btn btn-primary" id="saveButton">
+                        <i class="bi bi-save"></i> Simpan
+                    </button>
                 </div>
             </form>
         </div>
@@ -107,17 +136,14 @@
 
 <script type="text/javascript">
     jQuery(document).ready(function($) {
-        // use select 2 for select element
+        // Initialize Select2 for supplier
         $('#select_supplier').select2({
-            dropdownParent: $(".modal-body"),
-            // theme
+            dropdownParent: $("#addModal"),
             theme: 'bootstrap4',
             width: '100%',
-            // placeholder
             placeholder: 'Pilih Supplier',
             ajax: {
-                url: '<?= site_url('suppliers/fetch') ?>',
-                // post
+                url: '<?= base_url('suppliers/fetch') ?>',
                 type: 'POST',
                 dataType: 'json',
                 delay: 250,
@@ -135,18 +161,14 @@
             }
         });
 
-        // spare parts select 2
+        // Initialize Select2 for spare parts
         $('#select_spare_part').select2({
-            dropdownParent: $(".modal-body"),
-            // theme
+            dropdownParent: $("#addModal"),
             theme: 'bootstrap4',
-            // set width
             width: '100%',
-            // placeholder
             placeholder: 'Pilih Spare Part',
             ajax: {
                 url: '<?= site_url('spare-parts/fetch') ?>',
-                // post
                 type: 'POST',
                 dataType: 'json',
                 delay: 250,
@@ -156,6 +178,7 @@
                     };
                 },
                 processResults: function(response) {
+                    console.log(response);
                     return {
                         results: response.data
                     };
@@ -164,80 +187,211 @@
             }
         });
 
-        // add class for select 2 to form-select
-        $('.select2-container').addClass('form-select');
-    });
+         // add class for select 2 to form-select
+         $('.select2-container').addClass('form-select');
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // if spare part names[] is empty, hide table
-        if ($('input[name="spare_part_names[]"]').val() == '') {
-            $('#sparePartTable').hide();
+        // Format currency
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(angka);
         }
 
-        // add spare part
+        // Calculate grand total
+        function calculateTotal() {
+            let total = 0;
+            $('input[name="sub_totals[]"]').each(function() {
+                total += parseInt($(this).val()) || 0;
+            });
+            $('#add_total').val(total);
+            $('#display_total').val(formatRupiah(total));
+            $('#add_payment_amount').val(total);
+        }
+
+        // Initially hide spare part table until items are added
+        $('#sparePartTable').hide();
+        
+        // Add spare part button handler
         $('#addSparePart').on('click', function() {
-            // set id and name for spare part from select 2
-            let sparePartId = $('#select_spare_part').val();
-            let sparePartName = $('#select_spare_part option:selected').text();
+            const sparePartId = $('#select_spare_part').val();
+            const sparePartName = $('#select_spare_part option:selected').text();
 
-            // check if spare part id is empty
-            if (sparePartId == '') {
-                alert('Pilih spare part terlebih dahulu');
+            // Validate selection
+            if (!sparePartId) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Silakan pilih spare part terlebih dahulu',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
                 return;
             }
 
-            // check if spare part name is empty
-            if (sparePartName == '') {
-                // show pop up dialog
-                alert('Pilih spare part terlebih dahulu');
+            // Check for duplicate entries
+            if ($(`input[name="spare_part_ids[]"][value="${sparePartId}"]`).length > 0) {
+                Swal.fire({
+                    title: 'Peringatan!',
+                    text: 'Spare part ini sudah ditambahkan',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
                 return;
             }
 
-            // check if spare part name is already exist
-            if ($('input[name="spare_part_names[]"][value="' + sparePartName + '"]').length > 0) {
-                alert('Spare part sudah ada');
-                return;
-            }
-
-            // append spare part to table
+            // Add row to the table
             $('#sparePartsContainer').append(`
-                <tr>
+                <tr data-spare-part-id="${sparePartId}">
                     <td>
                         <input type="hidden" name="spare_part_ids[]" value="${sparePartId}">
                         <input type="text" class="form-control" name="spare_part_names[]" value="${sparePartName}" readonly>
                     </td>
-                    <td><input type="number" class="form-control" name="quantities[]" placeholder="Jumlah" min="1"></td>
-                    <td><input type="number" class="form-control" name="sell_prices[]" placeholder="Harga Jual" step="1"></td>
-                    <td><input type="number" class="form-control" name="buy_prices[]" placeholder="Harga Beli" step="1"></td>
-                    <td><input type="number" class="form-control" name="sub_totals[]" placeholder="Sub Total" readonly></td>
-                    <td><button type="button" class="btn btn-danger remove-spare-part">Hapus</button></td>
+                    <td>
+                        <input type="number" class="form-control quantity-input" name="quantities[]" min="1" value="1" required>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control buy-price-input" name="buy_prices[]" min="1" step="1" required>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control sell-price-input" name="sell_prices[]" min="1" step="1" required>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control" name="sub_totals[]" readonly>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-danger remove-spare-part">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
                 </tr>
             `);
 
-            // calculate sub total
-            $('#sparePartsContainer').on('input', 'input[name="quantities[]"], input[name="buy_prices[]"]', function() {
-                let quantity = $(this).closest('tr').find('input[name="quantities[]"]').val();
-                let buyPrice = $(this).closest('tr').find('input[name="buy_prices[]"]').val();
-
-                let subTotal = quantity * buyPrice;
-
-                $(this).closest('tr').find('input[name="sub_totals[]"]').val(subTotal);
-            });
-
-            // show table
+            // Reset select2
+            $('#select_spare_part').val(null).trigger('change');
+            
+            // Show the table and hide the no items message
             $('#sparePartTable').show();
+            $('#noSparePartMessage').hide();
+            
+            // Fetch spare part details for the selected item
+            $.ajax({
+                url: '<?= site_url('spare_parts/get-details') ?>/' + sparePartId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        const data = response.data;
+                        const row = $(`tr[data-spare-part-id="${sparePartId}"]`);
+                        
+                        // Set the default values
+                        row.find('.buy-price-input').val(data.details.current_buy_price);
+                        row.find('.sell-price-input').val(data.details.current_sell_price);
+                        
+                        // Calculate subtotal
+                        const qty = parseInt(row.find('.quantity-input').val()) || 0;
+                        const price = parseInt(row.find('.buy-price-input').val()) || 0;
+                        row.find('input[name="sub_totals[]"]').val(qty * price);
+                        
+                        // Update grand total
+                        calculateTotal();
+                    }
+                },
+                error: function() {
+                    console.error('Failed to fetch spare part details');
+                }
+            });
         });
 
-        // remove spare part
-        $('#sparePartsContainer').on('click', '.remove-spare-part', function() {
-            $(this).closest('tr').remove();
+        // Handle quantity and price changes to calculate subtotal
+        $(document).on('input', '.quantity-input, .buy-price-input', function() {
+            const row = $(this).closest('tr');
+            const qty = parseInt(row.find('.quantity-input').val()) || 0;
+            const price = parseInt(row.find('.buy-price-input').val()) || 0;
+            
+            // Update subtotal
+            row.find('input[name="sub_totals[]"]').val(qty * price);
+            
+            // Update grand total
+            calculateTotal();
+        });
 
-            // if spare part names[] is empty, hide table
-            if ($('input[name="spare_part_names[]"]').val() == '') {
+        // Remove spare part handler
+        $(document).on('click', '.remove-spare-part', function() {
+            $(this).closest('tr').remove();
+            
+            // Check if table is empty
+            if ($('#sparePartsContainer tr').length === 0) {
                 $('#sparePartTable').hide();
+                $('#noSparePartMessage').show();
+                $('#add_total').val(0);
+                $('#display_total').val(formatRupiah(0));
             }
+            
+            // Update grand total
+            calculateTotal();
+        });
+
+        // Form validation before submit
+        $('#purchaseForm').on('submit', function(e) {
+            // Check if there are spare parts
+            if ($('#sparePartsContainer tr').length === 0) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Silakan tambahkan minimal satu spare part',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return false;
+            }
+            
+            // Check if all required fields are filled
+            let isValid = true;
+            $('#sparePartsContainer tr').each(function() {
+                const quantity = $(this).find('.quantity-input').val();
+                const buyPrice = $(this).find('.buy-price-input').val();
+                const sellPrice = $(this).find('.sell-price-input').val();
+                
+                if (!quantity || !buyPrice || !sellPrice) {
+                    isValid = false;
+                    return false; // Break the loop
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Silakan isi semua detail spare part (jumlah, harga beli, harga jual)',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return false;
+            }
+            
+            // Set payment subtotal to match the total
+            const total = parseInt($('#add_total').val()) || 0;
+            $('input[name="payment_sub_total"]').val(total);
+            
+            return true;
+        });
+        
+        // Auto-update payment amount when total changes
+        $('#add_total').on('change', function() {
+            $('#add_payment_amount').val($(this).val());
+        });
+        
+        // Initialize modal with default state when opened
+        $('#addModal').on('show.bs.modal', function() {
+            $('#purchaseForm')[0].reset();
+            $('#sparePartsContainer').empty();
+            $('#sparePartTable').hide();
+            $('#noSparePartMessage').show();
+            $('#add_total').val(0);
+            $('#display_total').val(formatRupiah(0));
+            $('#select_supplier').val(null).trigger('change');
+            $('#select_spare_part').val(null).trigger('change');
         });
     });
-
-    
 </script>

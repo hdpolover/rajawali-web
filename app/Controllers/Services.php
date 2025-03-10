@@ -84,9 +84,9 @@ class Services extends BaseController
             $services = $this->serviceModel->select('id,name')
                 ->like('name', $searchTerm)
                 ->orderBy('name')
-                ->getServices();
+                ->findAll(); // Changed from getServices if that's causing an issue
         } else {
-            $services = $this->serviceModel->getServices();
+            $services = $this->serviceModel->findAll(); // Changed from getServices
         }
 
         // return data as data with id and name

@@ -100,34 +100,44 @@ class SpareParts extends BaseController
     {
         try {
             $formData = $this->request->getPost();
-            // $photo = $this->request->getFile('photo');
+            $photo = $this->request->getFile('photo');
             $isBase64 = false;
+            $photoFilename = 'default.jpg';
 
-            // Check if it's a regular file upload or base64 image
-            // if ($photo && $photo->isValid() && !$photo->hasMoved()) {
-            //     $uploadFile = $photo;
-            // } else if (!empty($formData['photo']) && strpos($formData['photo'], 'data:image') === 0) {
-            //     $uploadFile = $formData['photo'];
-            //     $isBase64 = true;
-            // } else {
-            //     throw new \Exception('No valid photo provided');
-            // }
+            // Check if a photo was uploaded
+            if ($photo && $photo->isValid() && !$photo->hasMoved()) {
+                // Upload photo using FileUpload helper with FTP
+                $uploadResult = uploadFileToStorage('spare_parts', $photo, $isBase64);
 
-            // // Upload photo using FileUpload helper
-            // $uploadResult = uploadFileToStorage('spare_parts', $uploadFile, $isBase64);
+                if (!$uploadResult['status']) {
+                    throw new \Exception($uploadResult['message']);
+                }
 
-            // if (!$uploadResult['status']) {
-            //     throw new \Exception($uploadResult['message']);
-            // }
-
-            // // Set photo URL to form data
-            // $formData['photo'] = $uploadResult['url'];
+                // Get just the filename from the URL
+                $parts = explode('/', $uploadResult['url']);
+                $photoFilename = end($parts);
+            } else if (!empty($formData['photo']) && strpos($formData['photo'], 'data:image') === 0) {
+                // Handle base64 image from camera
+                $uploadFile = $formData['photo'];
+                $isBase64 = true;
+                
+                // Upload photo using FileUpload helper with FTP
+                $uploadResult = uploadFileToStorage('spare_parts', $uploadFile, $isBase64);
+                
+                if (!$uploadResult['status']) {
+                    throw new \Exception($uploadResult['message']);
+                }
+                
+                // Get just the filename from the URL
+                $parts = explode('/', $uploadResult['url']);
+                $photoFilename = end($parts);
+            }
 
             // Prepare data for saving
             $data = [
                 'name' => $formData['name'],
                 'merk' => $formData['brand'],
-                'photo' => 'default.jpg',
+                'photo' => $photoFilename,
                 'code_number' => $formData['sparePartCode'],
                 'description' => $formData['description'],
                 'spare_part_type_id' => $formData['type'],
@@ -192,11 +202,29 @@ class SpareParts extends BaseController
                 throw new \Exception('Spare part detail not found');
             }
             
+            // Check if a new photo was uploaded
+            $photo = $this->request->getFile('photo');
+            $photoFilename = $sparePart->photo; // Default to existing photo
+            
+            if ($photo && $photo->isValid() && !$photo->hasMoved()) {
+                // Upload photo using FileUpload helper with FTP
+                $uploadResult = uploadFileToStorage('spare_parts', $photo, false);
+                
+                if (!$uploadResult['status']) {
+                    throw new \Exception($uploadResult['message']);
+                }
+                
+                // Get just the filename from the URL
+                $parts = explode('/', $uploadResult['url']);
+                $photoFilename = end($parts);
+            }
+            
             // Prepare data for updating spare part
             $sparePartData = [
                 'id' => $id,
                 'name' => $formData['name'],
                 'merk' => $formData['merk'],
+                'photo' => $photoFilename,
                 'code_number' => $formData['code_number'],
                 'description' => $formData['description'],
                 'spare_part_type_id' => $formData['type']

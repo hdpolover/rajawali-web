@@ -12,7 +12,8 @@
     "require": {
         "php": "^8.1",
         "codeigniter4/framework": "^4.0",
-        "nicolab/php-ftp-client": "^1.4"
+        "nicolab/php-ftp-client": "^1.4",
+        "tecnickcom/tcpdf": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",

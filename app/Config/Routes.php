@@ -24,6 +24,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('dashboard', 'Dashboard::index');
     // Add other protected routes here
     $routes->get('suppliers', 'Suppliers::index');
+
     $routes->get('spare-parts', 'SpareParts::index');
     $routes->get('admins', 'Admins::index');
     $routes->get('spare-part-types', 'SparePartTypes::index');
@@ -38,8 +39,20 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('mechanics', 'Mechanics::index');
     // service routes
     $routes->get('services', 'Services::index');
+
     // motorcycle routes
     $routes->get('motorcycles', 'Motorcycles::index');
+
+
+
+    // ajax fetches
+    $routes->post('spare-parts/fetch', 'SpareParts::fetch');
+    $routes->post('services/fetch', 'Services::fetch');
+    $routes->post('customers/fetch', 'Customers::fetch');
+    $routes->post('mechanics/fetch', 'Mechanics::fetch');
+    $routes->post('motorcycles/fetch', 'Motorcycles::fetchByCustomerId');
+    $routes->post('suppliers/fetch', 'Suppliers::fetch');
+    $routes->post('admins/fetch', 'Admins::fetch');
 });
 
 $routes->group('transactions', ['filter' => 'auth'], function ($routes) {
@@ -69,6 +82,27 @@ $routes->group('transactions', ['filter' => 'auth'], function ($routes) {
     $routes->get('returns', 'Returns::index');
     $routes->get('returns/add', 'Returns::add');
     $routes->post('returns/add', 'Returns::store');
+});
+
+// settings routes
+$routes->group('settings', ['filter' => 'auth'], function ($routes) {
+    // Mechanic Salary Settings routes
+    $routes->get('mechanic-salaries', 'MechanicSalarySettings::index');
+
+    // mechanic salary settings routes
+    $routes->group('mechanic-salaries', ['namespace' => 'App\Controllers'], function ($routes) {
+        $routes->get('/', 'MechanicSalarySettings::index');
+        $routes->get('create', 'MechanicSalarySettings::create');
+        $routes->post('save', 'MechanicSalarySettings::save');
+        $routes->get('edit/(:num)', 'MechanicSalarySettings::edit/$1');
+        $routes->post('update/(:num)', 'MechanicSalarySettings::update/$1');
+        $routes->get('delete/(:num)', 'MechanicSalarySettings::delete/$1');
+
+        // Salary report routes
+        $routes->get('reports', 'MechanicSalarySettings::reports');
+        $routes->post('generate-report', 'MechanicSalarySettings::generateReport');
+        $routes->post('print-report', 'MechanicSalarySettings::printReport');
+    });
 });
 
 
@@ -126,6 +160,8 @@ $routes->group('master-data', ['filter' => 'auth'], function ($routes) {
         $routes->post('fetch', 'Mechanics::fetch');
     });
 
+
+
     // service routes
     $routes->group('services', ['namespace' => 'App\Controllers'], function ($routes) {
         $routes->get('/', 'Services::index');
@@ -173,6 +209,21 @@ $routes->group('activity-logs', ['namespace' => 'App\Controllers'], function ($r
     $routes->get('/', 'ActivityLogs::index');
 });
 
+
+// Reports routes
+$routes->group('reports', ['filter' => 'auth'], function ($routes) {
+    $routes->get('/', 'Reports::index');
+    
+    // Sales reports
+    $routes->get('sales', 'Reports::sales');
+    $routes->post('sales/generate', 'Reports::generateSalesReport');
+    $routes->post('sales/print', 'Reports::printSalesReport');
+    
+    // Mechanic salary reports
+    $routes->get('mechanic-salaries', 'Reports::mechanicSalaries');
+    $routes->post('mechanic-salaries/generate', 'Reports::generateMechanicSalaryReport');
+    $routes->post('mechanic-salaries/print', 'Reports::printMechanicSalaryReport');
+});
 
 // role routes
 $routes->group('roles', ['namespace' => 'App\Controllers'], function ($routes) {
