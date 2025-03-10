@@ -697,6 +697,86 @@ class Sales extends BaseController
     }
     
     /**
+     * Print invoice (redirect to PDF generation)
+     */
+    public function print_invoice($id = null)
+    {
+        // Simply redirect to the PDF generation method
+        return $this->print_invoice_pdf($id);
+    }
+    
+    /**
+     * Generate PDF invoice for download
+     */
+    public function print_invoice_pdf($id = null)
+    {
+        if (!$id || !is_numeric($id)) {
+            session()->setFlashdata('alert', [
+                'type' => 'error',
+                'message' => 'ID penjualan tidak valid'
+            ]);
+            return redirect()->to('/transactions/sales');
+        }
+        
+        // Get sale details with all relations
+        $sale = $this->saleModel->getSales($id);
+        
+        if (!$sale) {
+            session()->setFlashdata('alert', [
+                'type' => 'error',
+                'message' => 'Data penjualan tidak ditemukan'
+            ]);
+            return redirect()->to('/transactions/sales');
+        }
+        
+        // Load TCPDF library
+        $pdf = new \TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        
+        // Set document information
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor('Rajawali Motor');
+        $pdf->SetTitle('Invoice #' . $sale->sale_number);
+        $pdf->SetSubject('Invoice Penjualan');
+        
+        // Remove header and footer
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        
+        // Set default monospaced font
+        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+        
+        // Set margins
+        $pdf->SetMargins(PDF_MARGIN_LEFT, 10, PDF_MARGIN_RIGHT);
+        
+        // Set auto page breaks
+        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+        
+        // Set image scale factor
+        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+        
+        // Set font
+        $pdf->SetFont('dejavusans', '', 10);
+        
+        // Add a page
+        $pdf->AddPage();
+        
+        // Get HTML content for PDF
+        $data = [
+            'sale' => $sale
+        ];
+        
+        // Capture the view output
+        $html = view('pages/transactions/sales/pdf_invoice', $data);
+        
+        // Write HTML content to the PDF
+        $pdf->writeHTML($html, true, false, true, false, '');
+        
+        // Close and output PDF document
+        $pdf->Output('invoice_' . $sale->sale_number . '.pdf', 'D');
+        exit();
+    }
+    
+    /**
      * Show archived/deleted sales
      */
     public function archived()

@@ -3,6 +3,17 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\CustomerModel;
+use App\Models\MotorcycleModel;
+use App\Models\AdminModel;
+use App\Models\SparePartModel;
+use App\Models\ServiceModel;
+use App\Models\MechanicModel;
+use App\Models\SparePartSaleModel;
+use App\Models\SparePartSaleDetailModel;
+use App\Models\ServiceSaleModel;
+use App\Models\ServiceSaleDetailModel;
+use App\Models\SalePaymentModel;
 use App\Models\SalePaymentDetailModel;
 
 class SaleModel extends Model
@@ -92,125 +103,217 @@ class SaleModel extends Model
     public function getSales($id = null)
     {
         if ($id == null) {
-            // builder
+            // Get all sales
             $builder = $this->db->table('sales');
-            // get sales
             $builder->select('sales.*');
+            $builder->orderBy('created_at', 'DESC');
+            $saleResults = $builder->get()->getResult();
 
-            // Execute the query and get the result as an array of objects
-            $saleResult = $builder->get()->getResult();
-
-            // create an array of sale entities
             $sales = [];
 
-            // loop through the results and create sale entities
-            foreach ($saleResult as $sale) {
-
-                // get the customer entity
+            foreach ($saleResults as $sale) {
+                // Get customer data
                 $customerModel = new CustomerModel();
-                $customer = $customerModel->where('id', $sale->customer_id)->first();
-
-                if ($customer) {
+                if ($sale->customer_id) {
+                    $customer = $customerModel->find($sale->customer_id);
                     $sale->customer = $customer;
                 } else {
                     $sale->customer = null;
                 }
 
-                // get the motorcycle entity
+                // Get motorcycle data
                 $motorcycleModel = new MotorcycleModel();
-                $motorcycle = $motorcycleModel->where('id', $sale->motorcycle_id)->first();
-                
-                if ($motorcycle) {
+                if ($sale->motorcycle_id) {
+                    $motorcycle = $motorcycleModel->find($sale->motorcycle_id);
                     $sale->motorcycle = $motorcycle;
                 } else {
                     $sale->motorcycle = null;
                 }
 
-                // get the admin entity
+                // Get admin data
                 $adminModel = new AdminModel();
-                $admin = $adminModel->find($sale->admin_id);
-                $sale->admin = $admin;
-
-                // get spare part sales
-                $sparePartSaleModel = new SparePartSaleModel();
-
-                // get 1 spare part sale for this sale and return as object
-                $sparePartSale = $sparePartSaleModel->where('sale_id', $sale->id)->first();
-
-                // get spare part sale details
-                $sparePartSaleDetailModel = new SparePartSaleDetailModel();
-
-                $sparePartSaleDetails = $sparePartSaleDetailModel->where('spare_part_sale_id', $sparePartSale->id)->findAll();
-
-                for ($i = 0; $i < count($sparePartSaleDetails); $i++) {
-                    $sparePartModel = new SparePartModel();
-                    $sparePart = $sparePartModel->find($sparePartSaleDetails[$i]->spare_part_id);
-                    $sparePartSaleDetails[$i]->spare_part = $sparePart;
+                if ($sale->admin_id) {
+                    $admin = $adminModel->find($sale->admin_id);
+                    $sale->admin = $admin;
+                } else {
+                    $sale->admin = null;
                 }
 
-                // set the spare part sale details
-                $sparePartSale->details = $sparePartSaleDetails;
+                // Get spare part sales data
+                $sparePartSaleModel = new SparePartSaleModel();
+                $sparePartSale = $sparePartSaleModel->where('sale_id', $sale->id)->first();
+                
+                if ($sparePartSale) {
+                    $sparePartSaleDetailModel = new SparePartSaleDetailModel();
+                    $sparePartDetails = $sparePartSaleDetailModel->where('spare_part_sale_id', $sparePartSale->id)->findAll();
 
-                // set the spare part sales
-                $sale->spare_part_sale = $sparePartSale;
-
-                // get service sales
-                $serviceSaleModel = new ServiceSaleModel();
-
-                $serviceSales = $serviceSaleModel->where('sale_id', $sale->id)->first();
-
-                if ($serviceSales) {
-                    // get service sale details
-                    $serviceSaleDetailModel = new ServiceSaleDetailModel();
-
-                    $serviceSaleDetails = $serviceSaleDetailModel->where('service_sale_id', $serviceSales->id)->findAll();
-
-                    for ($i = 0; $i < count($serviceSaleDetails); $i++) {
-                        $serviceModel = new ServiceModel();
-                        $service = $serviceModel->find($serviceSaleDetails[$i]->service_id);
-                        $serviceSaleDetails[$i]->service = $service;
-
-                        $mechanicModel = new MechanicModel();
-                        $mechanic = $mechanicModel->find($serviceSaleDetails[$i]->mechanic_id);
-                        $serviceSaleDetails[$i]->mechanic = $mechanic;  
+                    // Get spare part data for each detail
+                    foreach ($sparePartDetails as $detail) {
+                        $sparePartModel = new SparePartModel();
+                        $sparePart = $sparePartModel->find($detail->spare_part_id);
+                        $detail->spare_part = $sparePart;
                     }
 
-                    // set the service sale details
-                    $serviceSales->details = $serviceSaleDetails;
-
-                    // set the service sales
-                    $sale->service_sales = $serviceSales;
+                    $sparePartSale->details = $sparePartDetails;
+                    $sale->spare_part_sale = $sparePartSale;
                 } else {
-                    $sale->service_sales = null;
-                }   
+                    $sale->spare_part_sale = null;
+                }
 
-                // get the payment entity
-                $salePaymentModel = new SalePaymentModel();
+                // Get service sales data
+                $serviceSaleModel = new ServiceSaleModel();
+                $serviceSale = $serviceSaleModel->where('sale_id', $sale->id)->first();
 
-                $payment = $salePaymentModel->where('sale_id', $sale->id)->first();
+                if ($serviceSale) {
+                    $serviceSaleDetailModel = new ServiceSaleDetailModel();
+                    $serviceDetails = $serviceSaleDetailModel->where('service_sale_id', $serviceSale->id)->findAll();
+
+                    // Get service and mechanic data for each detail
+                    foreach ($serviceDetails as $detail) {
+                        $serviceModel = new ServiceModel();
+                        $service = $serviceModel->find($detail->service_id);
+                        $detail->service = $service;
+
+                        $mechanicModel = new MechanicModel();
+                        $mechanic = $mechanicModel->find($detail->mechanic_id);
+                        $detail->mechanic = $mechanic;
+                    }
+
+                    $serviceSale->details = $serviceDetails;
+                    $sale->service_sale = $serviceSale;
+                } else {
+                    $sale->service_sale = null;
+                }
+
+                // Get payment data
+                $paymentModel = new SalePaymentModel();
+                $payment = $paymentModel->where('sale_id', $sale->id)->first();
 
                 if ($payment) {
-                    // get the payment details
-                    $salePaymentDetailModel = new SalePaymentDetailModel();
+                    $paymentDetailModel = new SalePaymentDetailModel();
+                    $paymentDetails = $paymentDetailModel->where('sale_payment_id', $payment->id)->findAll();
 
-                    $paymentDetails = $salePaymentDetailModel->where('sale_payment_id', $payment->id)->findAll();
+                    // Get payment method details
+                    foreach ($paymentDetails as $detail) {
+                        // Set default payment method if not set
+                        if (!isset($detail->payment_method)) {
+                            $detail->payment_method = 'cash';
+                        }
+                    }
 
-                    // set the payment details
                     $payment->details = $paymentDetails;
-
-                    // set the payment
                     $sale->payment = $payment;
                 } else {
                     $sale->payment = null;
                 }
 
-                // add the sale entity to the array
                 $sales[] = $sale;
             }
 
             return $sales;
         } else {
-            return $this->where('id', $id)->first();
+            // Get specific sale by ID with all relations
+            $sale = $this->find($id);
+            if (!$sale) {
+                return null;
+            }
+
+            // Get customer data
+            $customerModel = new CustomerModel();
+            if ($sale->customer_id) {
+                $customer = $customerModel->find($sale->customer_id);
+                $sale->customer = $customer;
+            } else {
+                $sale->customer = null;
+            }
+
+            // Get motorcycle data
+            $motorcycleModel = new MotorcycleModel();
+            if ($sale->motorcycle_id) {
+                $motorcycle = $motorcycleModel->find($sale->motorcycle_id);
+                $sale->motorcycle = $motorcycle;
+            } else {
+                $sale->motorcycle = null;
+            }
+
+            // Get admin data
+            $adminModel = new AdminModel();
+            if ($sale->admin_id) {
+                $admin = $adminModel->find($sale->admin_id);
+                $sale->admin = $admin;
+            } else {
+                $sale->admin = null;
+            }
+
+            // Get spare part sales data
+            $sparePartSaleModel = new SparePartSaleModel();
+            $sparePartSale = $sparePartSaleModel->where('sale_id', $sale->id)->first();
+
+            if ($sparePartSale) {
+                $sparePartSaleDetailModel = new SparePartSaleDetailModel();
+                $sparePartDetails = $sparePartSaleDetailModel->where('spare_part_sale_id', $sparePartSale->id)->findAll();
+
+                // Get spare part data for each detail
+                foreach ($sparePartDetails as $detail) {
+                    $sparePartModel = new SparePartModel();
+                    $sparePart = $sparePartModel->find($detail->spare_part_id);
+                    $detail->spare_part = $sparePart;
+                }
+
+                $sparePartSale->details = $sparePartDetails;
+                $sale->spare_part_sale = $sparePartSale;
+            } else {
+                $sale->spare_part_sale = null;
+            }
+
+            // Get service sales data
+            $serviceSaleModel = new ServiceSaleModel();
+            $serviceSale = $serviceSaleModel->where('sale_id', $sale->id)->first();
+
+            if ($serviceSale) {
+                $serviceSaleDetailModel = new ServiceSaleDetailModel();
+                $serviceDetails = $serviceSaleDetailModel->where('service_sale_id', $serviceSale->id)->findAll();
+
+                // Get service and mechanic data for each detail
+                foreach ($serviceDetails as $detail) {
+                    $serviceModel = new ServiceModel();
+                    $service = $serviceModel->find($detail->service_id);
+                    $detail->service = $service;
+
+                    $mechanicModel = new MechanicModel();
+                    $mechanic = $mechanicModel->find($detail->mechanic_id);
+                    $detail->mechanic = $mechanic;
+                }
+
+                $serviceSale->details = $serviceDetails;
+                $sale->service_sale = $serviceSale;
+            } else {
+                $sale->service_sale = null;
+            }
+
+            // Get payment data
+            $paymentModel = new SalePaymentModel();
+            $payment = $paymentModel->where('sale_id', $sale->id)->first();
+
+            if ($payment) {
+                $paymentDetailModel = new SalePaymentDetailModel();
+                $paymentDetails = $paymentDetailModel->where('sale_payment_id', $payment->id)->findAll();
+
+                // Get payment method details
+                foreach ($paymentDetails as $detail) {
+                    // Set default payment method if not set
+                    if (!isset($detail->payment_method)) {
+                        $detail->payment_method = 'cash';
+                    }
+                }
+
+                $payment->details = $paymentDetails;
+                $sale->payment = $payment;
+            } else {
+                $sale->payment = null;
+            }
+
+            return $sale;
         }
     }
 }
