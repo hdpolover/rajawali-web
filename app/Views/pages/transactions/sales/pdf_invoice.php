@@ -5,59 +5,104 @@
     <title>Invoice</title>
     <style>
         body {
-            font-family: sans-serif;
-            font-size: 10pt;
-            line-height: 1.3;
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
         }
-        .text-center {
-            text-align: center;
-        }
-        .text-right {
-            text-align: right;
-        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 15px;
         }
         table.bordered {
-            border: 1px solid #000;
+            border: 1px solid #ddd;
         }
         table.bordered th, table.bordered td {
-            border: 1px solid #000;
-            padding: 5px;
+            border: 1px solid #ddd;
+            padding: 8px;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            font-weight: 600;
         }
+        
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #2c3e50;
         }
         .header h1 {
-            font-size: 18pt;
+            font-size: 24pt;
             margin: 0;
+            color: #2c3e50;
+            font-weight: bold;
         }
         .header p {
             margin: 5px 0;
+            color: #666;
         }
-        .mb-4 {
-            margin-bottom: 20px;
+        .header h2 {
+            font-size: 18pt;
+            margin: 15px 0 0 0;
+            color: #2c3e50;
         }
-        .mt-5 {
-            margin-top: 30px;
-        }
+        
+        .mb-4 { margin-bottom: 25px; }
+        .mt-5 { margin-top: 35px; }
+        
         .footer {
-            margin-top: 40px;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
         }
+        
         .col-6 {
-            width: 50%;
+            width: 48%;
             float: left;
+            margin-right: 2%;
         }
+        
         .row:after {
             content: "";
             display: table;
             clear: both;
+        }
+        
+        /* Customer and Transaction Info Styling */
+        .info-table td {
+            padding: 4px 0;
+            vertical-align: top;
+        }
+        
+        /* Items Table Styling */
+        .bordered thead th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 8px;
+        }
+        
+        .bordered tfoot th, .bordered tfoot td {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        /* Payment Summary Styling */
+        .payment-summary th {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+        }
+        
+        .footer p {
+            margin: 5px 0;
+            color: #666;
         }
     </style>
 </head>
@@ -72,7 +117,7 @@
 
     <div class="row mb-4">
         <div class="col-6">
-            <table>
+            <table class="info-table">
                 <tr>
                     <td width="40%">No. Transaksi</td>
                     <td width="5%">:</td>
@@ -99,7 +144,7 @@
             </table>
         </div>
         <div class="col-6">
-            <table>
+            <table class="info-table">
                 <tr>
                     <td width="40%">Pelanggan</td>
                     <td width="5%">:</td>
@@ -211,7 +256,7 @@
 
     <div class="mb-4">
         <p><strong>Ringkasan Pembayaran</strong></p>
-        <table class="bordered">
+        <table class="bordered payment-summary">
             <tr>
                 <th width="80%" class="text-right">Total Belanja</th>
                 <td width="20%" class="text-right">Rp <?= number_format($sale->total + $sale->discount, 0, ',', '.') ?></td>
