@@ -84,156 +84,168 @@ class Sales extends BaseController
         // get sale type
         $saleType = $postData['sale_type'];
 
-        $saleData = [];
-
-        if ($saleType === 'complete') {
-            // $sale data
+        // Try to save sale and catch any errors
+        try {
+            // Skip all validation for walkin sales to avoid validation errors with customer_id and motorcycle_id
+            if ($saleType === 'walkin') {
+                $this->saleModel->skipValidation(true);
+            }
+            
             $saleData = [
                 'sale_number' => $postData['sale_number'],
                 'sale_date' => $postData['sale_date'],
-                'customer_id' => $postData['customer_id'],
-                'motorcycle_id' => $postData['motorcycle_id'],
                 'admin_id' => session()->get('admin_id'),
-                'discount' => $postData['discount'],
+                'discount' => $postData['discount'] ?? 0,
                 'total' => $postData['total'],
-                'description' => $postData['description'],
+                'description' => $postData['description'] ?? '',
                 'status' => 'pending',
             ];
-        } else {
-            // get form data complete
-            $saleData = [
-                'sale_number' => $postData['sale_number'],
-                'sale_date' => $postData['sale_date'],
-                'customer_id' => null,
-                'motorcycle_id' => null,
+            
+            // Only add customer and motorcycle for complete sales
+            if ($saleType === 'complete') {
+                $saleData['customer_id'] = $postData['customer_id'];
+                $saleData['motorcycle_id'] = $postData['motorcycle_id'];
+            } else {
+                // Set explicitly to NULL for walkin sales
+                $saleData['customer_id'] = null;
+                $saleData['motorcycle_id'] = null;
+            }
+
+            $saved = $this->saleModel->insert($saleData);
+            
+            if (!$saved) {
+                $errors = $this->saleModel->errors();
+                session()->setFlashdata('alert', [
+                    'type' => 'error',
+                    'message' => 'Error: ' . implode(', ', $errors)
+                ]);
+                return redirect()->back()->withInput();
+            }
+            
+            // get the last inserted sale id
+            $saleId = $this->saleModel->getInsertID();
+
+            // decode spare parts data
+            $spareParts = json_decode($postData['spare_parts'], true);
+
+            // save sale details
+            // check if spare parts data is not empty
+            if (!empty($spareParts)) {
+                $sparePartData = [];
+                $sparePartTotal = 0;
+
+                // loop through spare parts data
+                foreach ($spareParts as $sparePart) {
+                    $sparePartData[] = [
+                        'spare_part_id' => $sparePart['spare_part_id'],
+                        'quantity' => $sparePart['quantity'],
+                        'price' => $sparePart['price'],
+                        'sub_total' => $sparePart['sub_total'],
+                        'description' => $sparePart['description'],
+                    ];
+
+                    $sparePartTotal += $sparePart['sub_total'];
+                }
+
+                // save spare part sales
+                $this->sparePartSaleModel->save([
+                    'sale_id' => $saleId,
+                    'total' => $sparePartTotal,
+                    'description' => '-',
+                ]);
+
+                // get the last inserted spare part sale id
+                $sparePartSaleId = $this->sparePartSaleModel->getInsertID();
+
+                // save spare part sale details
+                foreach ($sparePartData as $sparePart) {
+                    $this->sparePartSaleDetailModel->save([
+                        'spare_part_sale_id' => $sparePartSaleId,
+                        'spare_part_id' => $sparePart['spare_part_id'],
+                        'quantity' => $sparePart['quantity'],
+                        'price' => $sparePart['price'],
+                        'sub_total' => $sparePart['sub_total'],
+                        'description' => $sparePart['description'],
+                    ]);
+
+                    // update spare part stock
+                    $this->sparePartDetailModel->updateStock($sparePart['spare_part_id'], $sparePart['quantity']);
+                }
+            }
+
+            // If it's a complete sale, process services
+            if ($saleType === 'complete' && isset($postData['services'])) {
+                // decode services data
+                $services = json_decode($postData['services'], true);
+
+                // check if services data is not empty
+                if (!empty($services)) {
+                    $serviceData = [];
+                    $serviceTotal = 0;
+
+                    // loop through services data
+                    foreach ($services as $service) {
+                        $serviceData[] = [
+                            'service_id' => $service['service_id'],
+                            'mechanic_id' => $service['mechanic_id'],
+                            'price' => $service['price'],
+                            'description' => $service['description'],
+                            'sub_total' => $service['sub_total'],
+                        ];
+
+                        $serviceTotal += $service['sub_total'];
+                    }
+
+                    // save service sales
+                    $this->serviceSaleModel->save([
+                        'sale_id' => $saleId,
+                        'total' => $serviceTotal,
+                        'description' => '-',
+                    ]);
+
+                    // get the last inserted service sale id
+                    $serviceSaleId = $this->serviceSaleModel->getInsertID();
+
+                    // save service sale details
+                    foreach ($serviceData as $service) {
+                        $this->serviceSaleDetailModel->save([
+                            'service_sale_id' => $serviceSaleId,
+                            'service_id' => $service['service_id'],
+                            'mechanic_id' => $service['mechanic_id'],
+                            'price' => $service['price'],
+                            'quantity' => 1,    // default quantity is 1
+                            'sub_total' => $service['sub_total'],
+                            'description' => $service['description'],
+                        ]);
+                    }
+                }
+            }
+
+            // show success message and redirect to the previous page. set alert session data
+            session()->setFlashdata('alert', [
+                'type' => 'success',
+                'message' => 'Data penjualan berhasil ditambahkan',
+            ]);
+
+            // add activity log
+            $logData = [
                 'admin_id' => session()->get('admin_id'),
-                'discount' => $postData['discount'],
-                'total' => $postData['total'],
-                'description' => $postData['description'],
-                'status' => 'pending',
+                'table_name' => 'sales',
+                'action_type' => 'add',
+                'old_value' => null,
+                'new_value' => $postData['sale_date'],
             ];
-        }
 
-        // save sale
-        $this->saleModel->save($saleData);
+            $this->activityLogModel->saveActivityLog($logData);
 
-        // get the last inserted sale id
-        $saleId = $this->saleModel->getInsertID();
-
-        // decode spare parts data
-        $spareParts = json_decode($postData['spare_parts'], true);
-
-        // save sale details
-        // check if spare parts data is not empty
-        if (!empty($spareParts)) {
-            $sparePartData = [];
-
-            $sparePartTotal = 0;
-
-            // loop through spare parts data
-            foreach ($spareParts as $sparePart) {
-                $sparePartData[] = [
-                    'spare_part_id' => $sparePart['spare_part_id'],
-                    'quantity' => $sparePart['quantity'],
-                    'price' => $sparePart['price'],
-                    'sub_total' => $sparePart['sub_total'],
-                    'description' => $sparePart['description'],
-                ];
-
-                $sparePartTotal += $sparePart['sub_total'];
-            }
-
-
-            // save spare part sales
-            $this->sparePartSaleModel->save([
-                'sale_id' => $saleId,
-                'total' => $sparePartTotal,
-                'description' => '-',
+            return redirect()->to('/transactions/sales');
+        } catch (\Exception $e) {
+            session()->setFlashdata('alert', [
+                'type' => 'error',
+                'message' => 'Error: ' . $e->getMessage()
             ]);
-
-            // get the last inserted spare part sale id
-            $sparePartSaleId = $this->sparePartSaleModel->getInsertID();
-
-            // save spare part sale details
-            foreach ($sparePartData as $sparePart) {
-                $this->sparePartSaleDetailModel->save([
-                    'spare_part_sale_id' => $sparePartSaleId,
-                    'spare_part_id' => $sparePart['spare_part_id'],
-                    'quantity' => $sparePart['quantity'],
-                    'price' => $sparePart['price'],
-                    'sub_total' => $sparePart['sub_total'],
-                    'description' => $sparePart['description'],
-                ]);
-
-                // update spare part stock
-                $this->sparePartDetailModel->updateStock($sparePart['spare_part_id'], $sparePart['quantity']);
-            }
+            return redirect()->back()->withInput();
         }
-
-        // decode services data
-        $services = json_decode($postData['services'], true);
-
-        // check if services data is not empty
-        if (!empty($services)) {
-            $serviceData = [];
-
-            $serviceTotal = 0;
-
-            // loop through services data
-            foreach ($services as $service) {
-                $serviceData[] = [
-                    'service_id' => $service['service_id'],
-                    'mechanic_id' => $service['mechanic_id'],
-                    'price' => $service['price'],
-                    'description' => $service['description'],
-                    'sub_total' => $service['sub_total'],
-                ];
-
-                $serviceTotal += $service['sub_total'];
-            }
-
-            // save service sales
-            $this->serviceSaleModel->save([
-                'sale_id' => $saleId,
-                'total' => $serviceTotal,
-                'description' => '-',
-            ]);
-
-            // get the last inserted service sale id
-            $serviceSaleId = $this->serviceSaleModel->getInsertID();
-
-            // save service sale details
-            foreach ($serviceData as $service) {
-                $this->serviceSaleDetailModel->save([
-                    'service_sale_id' => $serviceSaleId,
-                    'service_id' => $service['service_id'],
-                    'mechanic_id' => $service['mechanic_id'],
-                    'price' => $service['price'],
-                    'quantity' => 1,    // default quantity is 1
-                    'sub_total' => $service['sub_total'],
-                    'description' => $service['description'],
-                ]);
-            }
-        }
-
-        // show success message and redirect to the previous page. set alert session data
-        session()->setFlashdata('alert', [
-            'type' => 'success',
-            'message' => 'Data penjualan berhasil ditambahkan',
-        ]);
-
-        // add activity log
-        $logData = [
-            'admin_id' => session()->get('admin_id'),
-            'table_name' => 'sales',
-            'action_type' => 'add',
-            'old_value' => null,
-            'new_value' => $postData['sale_date'],
-        ];
-
-        $this->activityLogModel->saveActivityLog($logData);
-
-        return redirect()->to('/transactions/sales');
     }
 
     public function add()

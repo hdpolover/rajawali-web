@@ -11,6 +11,7 @@
                     <select id="select_spare_part" name="select_spare_part">
                         <option value=""></option>
                     </select>
+                    <small class="form-text text-muted">Cari berdasarkan kode atau nama spare part atau scan barcode</small>
                 </div>
                 <div class="mb-3">
                     <label for="quantity" class="form-label">Jumlah</label>
@@ -32,18 +33,20 @@
 
 <script type="text/javascript">
     jQuery(document).ready(function($) {
+        let lastInputTime = 0;
+        let inputBuffer = '';
+        const SCANNER_CHARACTER_DELAY = 50; // Typical barcode scanners send characters very quickly
+        
         // spare parts select 2
-        $('#select_spare_part').select2({
-            // parent is select spare part modal
+        const $selectSparePart = $('#select_spare_part');
+        
+        $selectSparePart.select2({
             dropdownParent: $('#addSparePartModal'),
-            // theme
             theme: 'bootstrap4',
             width: '100%',
-            // placeholder
-            placeholder: 'Pilih Spare Part',
+            placeholder: 'Pilih Spare Part (Ketik kode atau nama)',
             ajax: {
                 url: '<?= site_url('spare-parts/fetch') ?>',
-                // post
                 type: 'POST',
                 dataType: 'json',
                 delay: 250,
@@ -58,8 +61,108 @@
                     };
                 },
                 cache: true
+            },
+            templateResult: formatSparePartResult,
+            templateSelection: formatSparePartSelection
+        });
+        
+        // Detect barcode scanner input (characterized by rapid keystrokes)
+        $(document).on('keypress', function(e) {
+            if ($('#addSparePartModal').is(':visible')) {
+                const currentTime = new Date().getTime();
+                
+                // If this keystroke came quickly after the previous one, it might be from a scanner
+                if (currentTime - lastInputTime < SCANNER_CHARACTER_DELAY) {
+                    // Likely a barcode scanner input - append to buffer
+                    inputBuffer += String.fromCharCode(e.which);
+                } else {
+                    // Too slow for scanner, reset buffer
+                    inputBuffer = String.fromCharCode(e.which);
+                }
+                
+                lastInputTime = currentTime;
+                
+                // If Enter key is pressed, process the barcode
+                if (e.which === 13 && inputBuffer.length > 3) {
+                    e.preventDefault(); // Prevent form submission
+                    processBarcodeInput(inputBuffer);
+                    inputBuffer = ''; // Clear the buffer
+                }
+                
+                // Auto process after a slight delay if it seems like the barcode input has ended
+                clearTimeout(window.barcodeTimeout);
+                window.barcodeTimeout = setTimeout(function() {
+                    if (inputBuffer.length > 3) {
+                        processBarcodeInput(inputBuffer);
+                        inputBuffer = '';
+                    }
+                }, 100);
             }
         });
+        
+        // Process barcode input and select the matching spare part
+        function processBarcodeInput(barcode) {
+            barcode = barcode.trim();
+            if (!barcode) return;
+            
+            // Focus on the select2 to ensure it's ready to receive our search
+            $selectSparePart.select2('open');
+            
+            // Make an AJAX call to search for the exact barcode match
+            $.ajax({
+                url: '<?= site_url('spare-parts/fetch') ?>',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    name: barcode
+                },
+                success: function(response) {
+                    if (response.data && response.data.length > 0) {
+                        // Find exact match (code_number matches barcode exactly)
+                        const exactMatch = response.data.find(item => 
+                            item.code_number === barcode
+                        );
+                        
+                        if (exactMatch) {
+                            // Create the option element if it doesn't exist
+                            if (!$selectSparePart.find("option[value='" + exactMatch.id + "']").length) {
+                                const newOption = new Option(exactMatch.text, exactMatch.id, true, true);
+                                $selectSparePart.append(newOption);
+                            }
+                            
+                            // Select the matching option and trigger change
+                            $selectSparePart.val(exactMatch.id).trigger('change');
+                            $selectSparePart.select2('close');
+                        }
+                    }
+                }
+            });
+        }
+
+        // Format spare part in dropdown results
+        function formatSparePartResult(data) {
+            if (data.loading) {
+                return data.text;
+            }
+            
+            if (!data.id) {
+                return data.text;
+            }
+            
+            var $container = $(
+                "<div class='select2-result-spare-part'>" +
+                    "<div class='select2-result-spare-part__code'><strong>Kode:</strong> " + data.code_number + "</div>" +
+                    "<div class='select2-result-spare-part__name'><strong>Nama:</strong> " + data.merk + " " + data.name + "</div>" +
+                "</div>"
+            );
+            
+            return $container;
+        }
+        
+        // Format selected spare part
+        function formatSparePartSelection(data) {
+            return data.text || data.code_number + " - " + data.merk + " " + data.name;
+        }
 
         // add class for select 2 to form-select
         $('.select2-container').addClass('form-select');

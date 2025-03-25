@@ -98,6 +98,8 @@ class SparePartModel extends Model
             // Perform the query to join spare_parts with spare_part_details
             $builder = $this->db->table('spare_parts');
             $builder->select('spare_parts.*');
+            // if deleted_at is not null, then get the spare parts that are not deleted
+            $builder->where('spare_parts.deleted_at', null);
 
             // Execute the query and get the result as an array of objects
             $results = $builder->get()->getResult();

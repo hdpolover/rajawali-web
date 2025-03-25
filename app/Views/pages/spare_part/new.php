@@ -191,6 +191,15 @@
 
         });
 
+        // if the input code number is not empty, show the rest of the form
+        document.getElementById('sparePartCode').addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                document.getElementById('restOfForm').style.display = 'block';
+            } else {
+                document.getElementById('restOfForm').style.display = 'none';
+            }
+        });
+
 
         // Initialize scanner when modal opens
         $('#scanModal').on('shown.bs.modal', function() {

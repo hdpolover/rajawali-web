@@ -57,13 +57,13 @@ class SpareParts extends BaseController
         $response = array();
 
         if ($this->request->getPost('name')) {
-
             $searchTerm = $this->request->getPost('name');
 
             $spareParts = $this->sparePartModel->select('id,merk,name,code_number')
                 ->groupStart()
                 ->like('name', $searchTerm)
                 ->orLike('code_number', $searchTerm)
+                ->orLike('merk', $searchTerm)
                 ->groupEnd()
                 ->orderBy('name')
                 ->findAll();
@@ -76,10 +76,12 @@ class SpareParts extends BaseController
 
         foreach ($spareParts as $sparePart) {
             $data[] = [
-                // convert id to int
                 'id' => (int)$sparePart->id,
                 'code_number' => $sparePart->code_number,
-                'text' => $sparePart->merk . " " . $sparePart->name,
+                'name' => $sparePart->name,
+                'merk' => $sparePart->merk,
+                // Format display text to show code number and name for better identification
+                'text' => $sparePart->code_number . ' - ' . $sparePart->merk . ' ' . $sparePart->name,
             ];
         }
 

@@ -15,7 +15,6 @@ class ServiceModel extends Model
         'name',
         'description',
         'difficulty',
-        'price',
         'created_at',
         'updated_at'
     ];
@@ -27,7 +26,7 @@ class ServiceModel extends Model
     protected $validationRules = [
         'name' => 'required|min_length[3]',
         'description' => 'required',
-        'difficulty' => 'required|numeric',
+        'difficulty' => 'required',
     ];
 
     protected $validationMessages = [
@@ -40,10 +39,53 @@ class ServiceModel extends Model
         ],
         'difficulty' => [
             'required' => 'Kesulitan harus diisi',
-            'numeric' => 'Kesulitan harus berupa angka'
         ],
-
     ];
+
+    /**
+     * Save service with price
+     * 
+     * @param array $serviceData Service data
+     * @param float $price Service price
+     * @return bool|int Returns service ID if successful, false otherwise
+     */
+    public function saveWithPrice($serviceData, $price)
+    {
+        // Make sure we have a database connection
+        $db = \Config\Database::connect();
+        $db->transBegin();
+
+        try {
+            // Insert service data
+            $this->save($serviceData);
+            
+            // Get the ID of the newly inserted service
+            $serviceId = $this->insertID();
+
+            // Create ServicePriceModel instance
+            $servicePriceModel = new ServicePriceModel();
+
+            // Add entry to service_prices table
+            $priceData = [
+                'service_id' => $serviceId,
+                'price' => $price,
+                'effective_date' => date('Y-m-d'), // Current date
+            ];
+            
+            $servicePriceModel->save($priceData);
+
+            // If everything is successful, commit the transaction
+            $db->transCommit();
+            
+            return $serviceId;
+        } catch (\Exception $e) {
+            // If there are any issues, rollback the transaction
+            $db->transRollback();
+            
+            log_message('error', 'Service save failed: ' . $e->getMessage());
+            return false;
+        }
+    }
 
     // get service prices
     public function getServices()
@@ -70,6 +112,5 @@ class ServiceModel extends Model
         }
 
         return $services;
-
     }
 }

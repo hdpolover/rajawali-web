@@ -4,14 +4,17 @@
 namespace App\Controllers;
 
 use App\Models\ServiceModel;
+use App\Models\ServicePriceModel;
 
 class Services extends BaseController
 {
     protected $serviceModel;
+    protected $servicePriceModel;
 
     public function __construct()
     {
         $this->serviceModel = new ServiceModel();
+        $this->servicePriceModel = new ServicePriceModel();
     }
 
     public function index()
@@ -27,49 +30,65 @@ class Services extends BaseController
     // add function
     public function add()
     {
-        // get form data
+        // Add detailed logging for debugging
+        log_message('debug', 'Services add method called');
+        log_message('debug', 'POST data: ' . json_encode($this->request->getPost()));
+
+        // get form data for service table
         $formData = [
-            'name'   => $this->request->getPost('name'),
+            'name' => $this->request->getPost('service_name'),
             'description' => $this->request->getPost('description'),
             'difficulty' => $this->request->getPost('difficulty')
         ];
 
-        // validate form data
+        // Get the price for service_prices table
+        $price = $this->request->getPost('price');
+
+        // validate service form data
         if (!$this->validate($this->serviceModel->getValidationRules())) {
-            return redirect()->to('/services')->withInput()->with('errors', $this->validator->getErrors());
+            log_message('debug', 'Validation errors: ' . json_encode($this->validator->getErrors()));
+            return redirect()->to('/master-data/services')->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        // insert data
-        $savedData = $this->serviceModel->save($formData);
+        // Make sure price isn't empty
+        if (empty($price)) {
+            log_message('debug', 'Price is empty');
+            session()->setFlashdata('errors', ['price' => 'Harga harus diisi']);
+            return redirect()->to('/master-data/services')->withInput();
+        }
 
-        if ($savedData) {
+        // Use the model method to save both service and price
+        $result = $this->serviceModel->saveWithPrice($formData, $price);
+
+        if ($result) {
+            log_message('debug', 'Service saved successfully with ID: ' . $result);
             // add activity log
             $logData = [
                 'admin_id' => session()->get('admin_id'),
                 'table_name' => 'services',
                 'action_type' => 'add',
                 'old_value' => null,
-                // get the new value name from the saved data
                 'new_value' => $formData['name'],
             ];
 
             $this->activityLogModel->saveActivityLog($logData);
 
-            // show success message and redirect to the previous page. set alert session data
+            // show success message and redirect
             session()->setFlashdata('alert', [
                 'type' => 'success',
                 'message' => 'Data servis berhasil ditambahkan.'
             ]);
 
-            return redirect()->to('/services');
+            return redirect()->to('/master-data/services');
         } else {
-            // show error message and redirect to the previous page. set alert session data
+            log_message('error', 'Failed to save service with price');
+            // show error message and redirect
             session()->setFlashdata('alert', [
                 'type' => 'danger',
                 'message' => 'Gagal menambahkan data servis.'
             ]);
 
-            return redirect()->to(previous_url());
+            return redirect()->to('/master-data/services');
         }
     }
 
@@ -84,9 +103,9 @@ class Services extends BaseController
             $services = $this->serviceModel->select('id,name')
                 ->like('name', $searchTerm)
                 ->orderBy('name')
-                ->findAll(); // Changed from getServices if that's causing an issue
+                ->findAll();
         } else {
-            $services = $this->serviceModel->findAll(); // Changed from getServices
+            $services = $this->serviceModel->findAll();
         }
 
         // return data as data with id and name
@@ -103,6 +122,5 @@ class Services extends BaseController
         $response['data'] = $data;
 
         return $this->response->setJSON($response);
-        
     }
 }

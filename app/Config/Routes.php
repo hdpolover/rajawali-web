@@ -22,28 +22,6 @@ $routes->get('/', static function () {
 // Protected Routes
 $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('dashboard', 'Dashboard::index');
-    // Add other protected routes here
-    $routes->get('suppliers', 'Suppliers::index');
-
-    $routes->get('spare-parts', 'SpareParts::index');
-    $routes->get('admins', 'Admins::index');
-    $routes->get('spare-part-types', 'SparePartTypes::index');
-    $routes->get('activity-logs', 'ActivityLogs::index');
-    // customer routes
-    $routes->get('customers', 'Customers::index');
-    // role routes
-    $routes->get('roles', 'Roles::index');
-    // menu routes
-    $routes->get('menus', 'Menus::index');
-    // mechanics routes
-    $routes->get('mechanics', 'Mechanics::index');
-    // service routes
-    $routes->get('services', 'Services::index');
-
-    // motorcycle routes
-    $routes->get('motorcycles', 'Motorcycles::index');
-
-
 
     // ajax fetches
     $routes->post('spare-parts/fetch', 'SpareParts::fetch');
@@ -160,8 +138,6 @@ $routes->group('master-data', ['filter' => 'auth'], function ($routes) {
         $routes->post('fetch', 'Mechanics::fetch');
     });
 
-
-
     // service routes
     $routes->group('services', ['namespace' => 'App\Controllers'], function ($routes) {
         $routes->get('/', 'Services::index');
@@ -213,12 +189,12 @@ $routes->group('activity-logs', ['namespace' => 'App\Controllers'], function ($r
 // Reports routes
 $routes->group('reports', ['filter' => 'auth'], function ($routes) {
     $routes->get('/', 'Reports::index');
-    
+
     // Sales reports
     $routes->get('sales', 'Reports::sales');
     $routes->post('sales/generate', 'Reports::generateSalesReport');
     $routes->post('sales/print', 'Reports::printSalesReport');
-    
+
     // Mechanic salary reports
     $routes->get('mechanic-salaries', 'Reports::mechanicSalaries');
     $routes->post('mechanic-salaries/generate', 'Reports::generateMechanicSalaryReport');

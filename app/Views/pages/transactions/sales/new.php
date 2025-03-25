@@ -202,34 +202,63 @@
         // get all data
         const saleType = document.querySelector('input[name="sale_type"]:checked').value;
 
-        const customerId = document.getElementById('select_customer').value;
-        const motorcycleId = document.getElementById('select_motocycle').value;
-        const discount = document.getElementById('discount').value;
-        const note = document.getElementById('note').value;
+        // Create form data
+        const formData = new FormData();
+        
+        // Common data for both types of sales
+        formData.append('sale_type', saleType);
+        formData.append('sale_date', '<?= date('Y-m-d H:i:s') ?>');
+        formData.append('sale_number', '<?= date('YmdHis') ?>');
+        formData.append('admin_id', '<?= session()->get('admin_id') ?>');
+        formData.append('discount', document.getElementById('discount').value);
+        formData.append('description', document.getElementById('note').value);
+        
+        // Total price
+        const totalPrice = document.getElementById('total').value;
+        formData.append('total', revertCurrencyID(totalPrice));
 
-        // get spare parts data
+        // If it's a complete sale, include customer and motorcycle data
+        if (saleType === 'complete') {
+            const customerId = document.getElementById('select_customer').value;
+            const motorcycleId = document.getElementById('select_motocycle').value;
+            
+            formData.append('customer_id', customerId);
+            formData.append('motorcycle_id', motorcycleId);
+        }
+        
+        // Get spare parts data
         const sparePartsContainer = document.getElementById('sparePartsContainer');
         const sparePartData = <?= json_encode($spare_parts) ?>;
 
+        // Make sure sparePartsContainer exists and has rows before processing
         const spareParts = [];
-        for (let i = 0; i < sparePartsContainer.rows.length; i++) {
-            const row = sparePartsContainer.rows[i];
-            // get spare part id from spare part code_number
-            const sparePartId = sparePartData.find(sparePart => sparePart.code_number == row.cells[1].textContent).id;
-            const quantity = row.cells[3].textContent;
-            const price = revertCurrencyID(row.cells[4].textContent);
-            const subTotal = revertCurrencyID(row.cells[5].textContent);
-            const description = row.cells[6].textContent;
-            spareParts.push({
-                spare_part_id: sparePartId,
-                quantity: quantity,
-                price: price,
-                sub_total: subTotal,
-                description: description,
-            });
+        if (sparePartsContainer && sparePartsContainer.rows.length > 0) {
+            for (let i = 0; i < sparePartsContainer.rows.length; i++) {
+                const row = sparePartsContainer.rows[i];
+                const codeNumber = row.cells[1].textContent.trim();
+                // Find the spare part by code number
+                const matchedSparePart = sparePartData.find(sparePart => sparePart.code_number === codeNumber);
+                
+                if (matchedSparePart) {
+                    const sparePartId = matchedSparePart.id;
+                    const quantity = row.cells[3].textContent;
+                    const price = revertCurrencyID(row.cells[4].textContent);
+                    const subTotal = revertCurrencyID(row.cells[5].textContent);
+                    const description = row.cells[6].textContent;
+                    
+                    spareParts.push({
+                        spare_part_id: sparePartId,
+                        quantity: quantity,
+                        price: price,
+                        sub_total: subTotal,
+                        description: description,
+                    });
+                }
+            }
         }
+        formData.append('spare_parts', JSON.stringify(spareParts));
 
-        // get services data
+        // Get services data
         const servicesContainer = document.getElementById('servicesContainer');
         const serviceData = <?= json_encode($services) ?>;
         const mechanicData = <?= json_encode($mechanics) ?>;
@@ -250,27 +279,7 @@
                 sub_total: price,
             });
         }
-
-        // create form data
-        const formData = new FormData();
-        // sale type
-        formData.append('sale_type', saleType); 
-        // transaction date is current date time
-        formData.append('sale_date', '<?= date('Y-m-d H:i:s') ?>');
-        // generate sale number with date time in milisecond
-        const saleNumber = '<?= date('YmdHis') ?>';
-        formData.append('sale_number', saleNumber);
-        formData.append('customer_id', customerId);
-        formData.append('motorcycle_id', motorcycleId);
-        formData.append('discount', discount);
-        formData.append('description', note);
-        formData.append('spare_parts', JSON.stringify(spareParts));
         formData.append('services', JSON.stringify(services));
-        // admin id
-        formData.append('admin_id', '<?= session()->get('admin_id') ?>');
-        // total price
-        const totalPrice = document.getElementById('total').value;
-        formData.append('total', revertCurrencyID(totalPrice));
 
         // send ajax request
         $.ajax({

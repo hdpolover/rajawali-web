@@ -152,82 +152,113 @@ class PurchaseModel extends Model
 
     function savePurchase($data)
     {
-        // save the purchase
-        $this->save($data);
+        // Start a transaction
+        $this->db->transBegin();
 
-        // get the purchase id
-        $purchaseId = $this->insertID();
-
-        // get the spare parts
-        $spareParts = $data['spare_parts'];
-
-        // loop through the spare parts and save the purchase details
-        foreach ($spareParts as $sparePart) {
-            $purchaseDetailModel = new PurchaseDetailModel();
-
-            $purchaseDetailModel->save([
-                'purchase_id' => $purchaseId,
-                'spare_part_id' => $sparePart['spare_part_id'],
-                'quantity' => $sparePart['quantity'],
-                'buy_price' => $sparePart['buy_price'],
-                'sub_total' => $sparePart['sub_total'],
+        try {
+            // Save the purchase
+            $this->insert([
+                'supplier_id' => $data['supplier_id'],
+                'description' => $data['description'],
+                'admin_id' => $data['admin_id'],
+                'total' => $data['total'],
+                'status' => $data['status'],
+                'purchase_date' => $data['purchase_date'],
             ]);
 
-            // get the spare part details
-            $sparePartDetailModel = new SparePartDetailModel();
+            // Get the purchase id
+            $purchaseId = $this->db->insertID();
+            
+            // Verify purchase was actually inserted
+            if (!$purchaseId) {
+                throw new \Exception('Failed to insert purchase record');
+            }
 
-            $sparePartDetail = $sparePartDetailModel->where('spare_part_id', $sparePart['spare_part_id'])->first();
+            // Get the spare parts
+            $spareParts = $data['spare_parts'];
 
-            // if price is different, add price history
-            if ($sparePartDetail->current_buy_price != $sparePart['buy_price'] || $sparePartDetail->current_sell_price != $sparePart['sell_price']) {
-                $sparePartPriceHistoryModel = new SparePartPriceHistoryModel();
+            // Loop through the spare parts and save the purchase details
+            foreach ($spareParts as $sparePart) {
+                $purchaseDetailModel = new PurchaseDetailModel();
 
-                $sparePartPriceHistoryModel->save([
+                $purchaseDetailModel->insert([
+                    'purchase_id' => $purchaseId,
                     'spare_part_id' => $sparePart['spare_part_id'],
-                    'old_buy_price' => $sparePartDetail->current_buy_price,
-                    'old_sell_price' => $sparePartDetail->current_sell_price,
-                    'new_buy_price' => $sparePart['buy_price'],
-                    'new_sell_price' => $sparePart['sell_price'],
-                    'change_date' => date('Y-m-d H:i:s'),
+                    'quantity' => $sparePart['quantity'],
+                    'buy_price' => $sparePart['buy_price'],
+                    'sub_total' => $sparePart['sub_total'],
+                ]);
+
+                // Get the spare part details
+                $sparePartDetailModel = new SparePartDetailModel();
+
+                $sparePartDetail = $sparePartDetailModel->where('spare_part_id', $sparePart['spare_part_id'])->first();
+
+                // If price is different, add price history
+                if ($sparePartDetail->current_buy_price != $sparePart['buy_price'] || $sparePartDetail->current_sell_price != $sparePart['sell_price']) {
+                    $sparePartPriceHistoryModel = new SparePartPriceHistoryModel();
+
+                    $sparePartPriceHistoryModel->insert([
+                        'spare_part_id' => $sparePart['spare_part_id'],
+                        'old_buy_price' => $sparePartDetail->current_buy_price,
+                        'old_sell_price' => $sparePartDetail->current_sell_price,
+                        'new_buy_price' => $sparePart['buy_price'],
+                        'new_sell_price' => $sparePart['sell_price'],
+                        'change_date' => date('Y-m-d H:i:s'),
+                    ]);
+                }
+
+                // Update the spare part detail current stock
+                $newStock = $sparePartDetail->current_stock + $sparePart['quantity'];
+
+                // Update the spare part detail current prices
+                $sparePartDetailModel->update($sparePartDetail->id, [
+                    'current_stock' => $newStock,
+                    'current_buy_price' => $sparePart['buy_price'],
+                    'current_sell_price' => $sparePart['sell_price'],
                 ]);
             }
 
-            // update the spare part detail current stock
-            $newStock = $sparePartDetail->current_stock + $sparePart['quantity'];
+            // Save purchase payment
+            $purchasePaymentModel = new PurchasePaymentModel();
 
-            // update the spare part detail current prices
-            $sparePartDetailModel->update($sparePartDetail->id, [
-                'current_stock' => $newStock,
-                'current_buy_price' => $sparePart['buy_price'],
-                'current_sell_price' => $sparePart['sell_price'],
+            $purchasePaymentModel->insert([
+                'purchase_id' => $purchaseId,
+                'status' => $data['payment']['status'],
+                'total' => $data['total'],
+                'description' => $data['payment']['description'],
             ]);
+
+            // Get the last inserted id
+            $purchasePaymentId = $purchasePaymentModel->insertID();
+            
+            // Verify payment was inserted
+            if (!$purchasePaymentId) {
+                throw new \Exception('Failed to insert purchase payment record');
+            }
+
+            // Save purchase payment details
+            $purchasePaymentDetailModel = new PurchasePaymentDetailModel();
+
+            $purchasePaymentDetailModel->insert([
+                'purchase_payment_id' => $purchasePaymentId,
+                'payment_date' => $data['payment']['payment_date'],
+                'payment_type' => $data['payment']['payment_method'],
+                'status' => $data['payment']['status'],
+                'sub_total' => $data['payment']['sub_total'],
+                'description' => $data['payment']['description'],
+            ]);
+
+            // Commit transaction if all operations succeeded
+            $this->db->transCommit();
+            
+            return $purchaseId;
+        } catch (\Exception $e) {
+            // Rollback transaction if any operation failed
+            $this->db->transRollback();
+            
+            log_message('error', 'Purchase save failed: ' . $e->getMessage());
+            return false;
         }
-
-        // save purchase payment
-        $purchasePaymentModel = new PurchasePaymentModel();
-
-        $purchasePaymentModel->save([
-            'purchase_id' => $purchaseId,
-            'status' => $data['payment']['status'],
-            'total' => $data['total'],
-            'description' => $data['payment']['description'],
-        ]);
-
-        // get the last inserted id
-        $purchasePaymentId = $purchasePaymentModel->insertID();
-
-        // save purchase payment details
-        $purchasePaymentDetailModel = new PurchasePaymentDetailModel();
-
-        $purchasePaymentDetailModel->save([
-            'purchase_payment_id' => $purchasePaymentId,
-            'payment_date' => $data['payment']['payment_date'],
-            'payment_type' => $data['payment']['payment_method'],
-            'status' => $data['payment']['status'],
-            'sub_total' => $data['payment']['sub_total'],
-            'description' => $data['payment']['description'],
-        ]);
-
-        return $purchaseId;
     }
 }
