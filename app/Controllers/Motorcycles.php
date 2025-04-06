@@ -41,7 +41,7 @@ class Motorcycles extends BaseController
 
         // validate form data
         if (!$this->validate($this->motorcycleModel->getValidationRules())) {
-            return redirect()->to('/motorcycles')->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->to('/master-data/motorcycles')->withInput()->with('errors', $this->validator->getErrors());
         }
 
         // insert data
@@ -73,7 +73,7 @@ class Motorcycles extends BaseController
             ]);
         }
 
-        return redirect()->to('/motorcycles');
+        return redirect()->to('/master-data/motorcycles');
     }
 
     // add function

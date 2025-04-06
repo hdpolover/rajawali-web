@@ -26,10 +26,10 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-        'hostname'     => 'localhost',
-        'username'     => '',
-        'password'     => '',
-        'database'     => '',
+        'hostname'     => '153.92.15.45',
+        'username'     => 'u544553474_admin_user',
+        'password'     => '?8+@LhpKa',
+        'database'     => 'u544553474_bengkel_db',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,

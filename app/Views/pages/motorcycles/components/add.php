@@ -2,7 +2,7 @@
 <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="<?= base_url('mechanics/add') ?>" method="post">
+            <form action="<?= base_url('/master-data/motorcycles/add') ?>" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title">Tambah Mekanik Baru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

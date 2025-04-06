@@ -36,7 +36,7 @@ class SparePartTypes extends BaseController
 
         // validate form data
         if (!$this->validate($this->sparePartTypeModel->getValidationRules())) {
-            return redirect()->to('/spare-part-types')->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->to('/master-data/spare-part-types')->withInput()->with('errors', $this->validator->getErrors());
         }
 
         // insert data
@@ -63,7 +63,7 @@ class SparePartTypes extends BaseController
                 'message' => 'Tipe Spare Part berhasil ditambahkan.'
             ]);
 
-            return redirect()->to('/spare-part-types');
+            return redirect()->to('/master-data/spare-part-types');
         } else {
             // show error message and redirect to the previous page. set alert session data
             session()->setFlashdata('alert', [
@@ -71,7 +71,7 @@ class SparePartTypes extends BaseController
                 'message' => 'Gagal menambahkan Tipe Spare Part.'
             ]);
 
-            return redirect()->to('/spare-part-types');
+            return redirect()->to('/master-data/spare-part-types');
         }
     }
 
@@ -86,7 +86,7 @@ class SparePartTypes extends BaseController
 
         // validate form data
         if (!$this->validate($this->sparePartTypeModel->getValidationRules())) {
-            return redirect()->to('/spare-part-types')->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->to('/master-data/spare-part-types')->withInput()->with('errors', $this->validator->getErrors());
         }
 
         // get the old data
@@ -117,7 +117,7 @@ class SparePartTypes extends BaseController
                 'message' => 'Tipe Spare Part berhasil diubah.'
             ]);
 
-            return redirect()->to('/spare-part-types');
+            return redirect()->to('/master-data/spare-part-types');
         } else {
             // show error message and redirect to the previous page. set alert session data
             session()->setFlashdata('alert', [
@@ -125,7 +125,7 @@ class SparePartTypes extends BaseController
                 'message' => 'Gagal mengubah Tipe Spare Part.'
             ]);
 
-            return redirect()->to('/spare-part-types');
+            return redirect()->to('/master-data/spare-part-types');
         }
     }
 
@@ -159,7 +159,7 @@ class SparePartTypes extends BaseController
                 'message' => 'Tipe Spare Part berhasil dihapus.'
             ]);
 
-            return redirect()->to('/spare-part-types');
+            return redirect()->to('/master-data/spare-part-types');
         } else {
             // show error message and redirect to the previous page. set alert session data
             session()->setFlashdata('alert', [
@@ -167,7 +167,7 @@ class SparePartTypes extends BaseController
                 'message' => 'Gagal menghapus Tipe Spare Part.'
             ]);
 
-            return redirect()->to('/spare-part-types');
+            return redirect()->to('/master-data/spare-part-types');
         }
     }
 }

@@ -69,7 +69,7 @@ class Suppliers extends BaseController
 
         // validate form data
         if (!$this->validate($this->supplierModel->getValidationRules())) {
-            return redirect()->to('/suppliers')->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->to('/master-data/suppliers')->withInput()->with('errors', $this->validator->getErrors());
         }
 
         // insert data
@@ -94,7 +94,7 @@ class Suppliers extends BaseController
                 'message' => 'Supplier berhasil ditambahkan.'
             ]);
 
-            return redirect()->to('/suppliers');
+            return redirect()->to('/master-data/suppliers');
         } else {
             // show error message and redirect to the previous page. set alert session data
             session()->setFlashdata('alert', [
@@ -102,7 +102,7 @@ class Suppliers extends BaseController
                 'message' => 'Gagal menambahkan supplier.'
             ]);
 
-            return redirect()->to('/suppliers');
+            return redirect()->to('/master-data/suppliers');
         }
     }
 
@@ -118,7 +118,7 @@ class Suppliers extends BaseController
 
         // validate form data
         if (!$this->validate($this->supplierModel->getValidationRules())) {
-            return redirect()->to('/suppliers')->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->to('/master-data/suppliers')->withInput()->with('errors', $this->validator->getErrors());
         }
 
         // get the old data
@@ -145,7 +145,7 @@ class Suppliers extends BaseController
                 'message' => 'Supplier berhasil diubah.'
             ]);
 
-            return redirect()->to('/suppliers');
+            return redirect()->to('/master-data/suppliers');
         } else {
             // show error message and redirect to the previous page. set alert session data
             session()->setFlashdata('alert', [
@@ -153,7 +153,7 @@ class Suppliers extends BaseController
                 'message' => 'Gagal mengubah supplier.'
             ]);
 
-            return redirect()->to('/suppliers');
+            return redirect()->to('/master-data/suppliers');
         }
     }
 
@@ -184,6 +184,6 @@ class Suppliers extends BaseController
             'message' => 'Supplier berhasil dihapus.'
         ]);
 
-        return redirect()->to('/suppliers');
+        return redirect()->to('/master-data/suppliers');
     }
 }

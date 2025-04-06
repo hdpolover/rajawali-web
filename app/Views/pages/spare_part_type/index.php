@@ -81,7 +81,7 @@
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="<?= base_url('spare-part-types/edit') ?>" method="post">
+            <form action="<?= base_url('master-data/spare-part-types/edit') ?>" method="post">
                 <?= csrf_field() ?>
                 <div class="modal-header">
                     <h5 class="modal-title">Edit Tipe Spare Part</h5>
@@ -111,7 +111,7 @@
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="<?= base_url('spare-part-types/delete') ?>" method="post">
+            <form action="<?= base_url('master-data/spare-part-types/delete') ?>" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title">Hapus Tipe Spare Part</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -134,7 +134,7 @@
 <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="<?= base_url('spare-part-types/add') ?>" method="post">
+            <form action="<?= base_url('master-data/spare-part-types/add') ?>" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title">Tambah Tipe Spare Part Baru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

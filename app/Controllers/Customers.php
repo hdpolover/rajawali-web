@@ -68,7 +68,7 @@ class Customers extends BaseController
 
         // validate form data
         if (!$this->validate($this->customerModel->getValidationRules())) {
-            return redirect()->to('/customers')->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->to('/master-data/customers')->withInput()->with('errors', $this->validator->getErrors());
         }
 
         // insert data
@@ -100,7 +100,7 @@ class Customers extends BaseController
             ]);
         }
 
-        return redirect()->to('/customers');
+        return redirect()->to('/master-data/customers');
     }
 
     // add function
@@ -198,7 +198,7 @@ class Customers extends BaseController
             ]);
         }
 
-        return redirect()->to('/customers');
+        return redirect()->to('/master-data/customers');
     }
 
     // delete function
@@ -239,6 +239,6 @@ class Customers extends BaseController
             ]);
         }
 
-        return redirect()->to('/customers');
+        return redirect()->to('/master-data/customers');
     }
 }

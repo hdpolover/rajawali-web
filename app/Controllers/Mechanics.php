@@ -37,7 +37,7 @@ class Mechanics extends BaseController
 
         // validate form data
         if (!$this->validate($this->mechanicModel->getValidationRules())) {
-            return redirect()->to('/mechanics')->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->to('/master-data/mechanics')->withInput()->with('errors', $this->validator->getErrors());
         }
 
         // insert data
@@ -69,7 +69,7 @@ class Mechanics extends BaseController
             ]);
         }
 
-        return redirect()->to('/mechanics');
+        return redirect()->to('/master-data/mechanics');
     }
 
     // fetch data
