@@ -41,16 +41,19 @@
             var license_number = button.data('license_number');
             var customer_id = button.data('customer_id');
 
-            var modal = $(this);
-            modal.find('.modal-body #view_brand').text(brand);
+            var modal = $(this);            modal.find('.modal-body #view_brand').text(brand);
             modal.find('.modal-body #view_model').text(model);
             modal.find('.modal-body #view_license_number').text(license_number);
-
+            
             // get customer name from customer array
             var customers = <?= json_encode($customers) ?>;
-            var customer = customers.find(customer => customer.id == customer_id);
-
-            modal.find('.modal-body #view_customer').text(customer.name);
+            var customer = customers.find(customer => Number(customer.id) === Number(customer_id));
+            
+            if (customer) {
+                modal.find('.modal-body #view_customer').text(customer.name);
+            } else {
+                modal.find('.modal-body #view_customer').text('-');
+            }
 
         });
     });

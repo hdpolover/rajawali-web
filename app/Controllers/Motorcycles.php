@@ -1,5 +1,5 @@
 <?php
-// app/Controllers/Dashboard.php
+// app/Controllers/Motorcycles.php
 
 namespace App\Controllers;
 
@@ -15,13 +15,11 @@ class Motorcycles extends BaseController
     {
         $this->motorcycleModel = new MotorcycleModel();
         $this->customerModel = new CustomerModel();
-    }
-
-    public function index()
+    }    public function index()
     {
         $data = [
             'title'       => 'Data Motor Pelanggan',
-            'motorcycles' => $this->motorcycleModel->findAll(),
+            'motorcycles' => $this->motorcycleModel->getMotorcycles(),
             'customers' => $this->customerModel->findAll()
         ];
 
@@ -103,6 +101,220 @@ class Motorcycles extends BaseController
             $response['data'] = $this->motorcycleModel->find($this->motorcycleModel->insertID);
         } else {
             $response['message'] = 'Data gagal ditambahkan';
+        }        return $this->response->setJSON($response);
+    }
+      // update function
+    public function update()
+    {
+        $id = $this->request->getPost('id');
+        
+        if (!$id) {
+            session()->setFlashdata('alert', [
+                'type' => 'danger',
+                'message' => 'ID motor tidak ditemukan'
+            ]);
+            return redirect()->to('/master-data/motorcycles');
+        }
+
+        // get existing data to save in activity log
+        $existingData = $this->motorcycleModel->find($id);
+        if (!$existingData) {
+            session()->setFlashdata('alert', [
+                'type' => 'danger',
+                'message' => 'Data motor tidak ditemukan'
+            ]);
+            return redirect()->to('/master-data/motorcycles');
+        }
+
+        // get form data
+        $formData = [
+            'id' => $id,
+            'model' => $this->request->getPost('model'),
+            'brand' => $this->request->getPost('brand'),
+            'customer_id' => $this->request->getPost('customer_id'),
+            'license_number' => $this->request->getPost('license_number')
+        ];
+
+        // validate form data
+        if (!$this->validate($this->motorcycleModel->getValidationRules())) {
+            return redirect()->to('/master-data/motorcycles')->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        // update data
+        $savedData = $this->motorcycleModel->save($formData);
+
+        if ($savedData) {
+            // add activity log
+            $logData = [
+                'admin_id' => session()->get('admin_id'),
+                'table_name' => 'motorcycles',
+                'action_type' => 'update',
+                'old_value' => $existingData->brand . ' ' . $existingData->model . ' - ' . $existingData->license_number,
+                'new_value' => $formData['brand'] . ' ' . $formData['model'] . ' - ' . $formData['license_number'],
+            ];
+
+            $this->activityLogModel->saveActivityLog($logData);
+
+            // show success message
+            session()->setFlashdata('alert', [
+                'type' => 'success',
+                'message' => 'Data berhasil diperbarui'
+            ]);
+        } else {
+            // show error message
+            session()->setFlashdata('alert', [
+                'type' => 'danger',
+                'message' => 'Data gagal diperbarui'
+            ]);
+        }
+
+        return redirect()->to('/master-data/motorcycles');
+    }
+
+    // update function for AJAX
+    public function updateAlt()
+    {
+        $response = ['success' => false, 'message' => ''];
+
+        $id = $this->request->getPost('id');
+        if (!$id) {
+            $response['message'] = 'ID motor tidak ditemukan';
+            return $this->response->setJSON($response);
+        }
+
+        // get existing data for activity log
+        $existingData = $this->motorcycleModel->find($id);
+        if (!$existingData) {
+            $response['message'] = 'Data motor tidak ditemukan';
+            return $this->response->setJSON($response);
+        }
+
+        // get form data
+        $formData = [
+            'id' => $id,
+            'model' => $this->request->getPost('model'),
+            'brand' => $this->request->getPost('brand'),
+            'customer_id' => $this->request->getPost('customer_id'),
+            'license_number' => $this->request->getPost('license_number')
+        ];
+
+        // validate form data
+        if (!$this->validate($this->motorcycleModel->getValidationRules())) {
+            $response['message'] = $this->validator->getErrors();
+            return $this->response->setJSON($response);
+        }
+
+        // update data
+        $savedData = $this->motorcycleModel->save($formData);
+
+        if ($savedData) {
+            // add activity log
+            $logData = [
+                'admin_id' => session()->get('admin_id'),
+                'table_name' => 'motorcycles',
+                'action_type' => 'update',
+                'old_value' => $existingData->brand . ' ' . $existingData->model . ' - ' . $existingData->license_number,
+                'new_value' => $formData['brand'] . ' ' . $formData['model'] . ' - ' . $formData['license_number'],
+            ];
+
+            $this->activityLogModel->saveActivityLog($logData);
+
+            $response['success'] = true;
+            $response['data'] = $this->motorcycleModel->find($id);
+        } else {
+            $response['message'] = 'Data gagal diperbarui';
+        }        return $this->response->setJSON($response);
+    }
+      // delete function
+    public function delete()
+    {
+        $id = $this->request->getPost('id');
+        
+        if (!$id) {
+            session()->setFlashdata('alert', [
+                'type' => 'danger',
+                'message' => 'ID motor tidak ditemukan'
+            ]);
+            return redirect()->to('/master-data/motorcycles');
+        }
+
+        // get existing data for activity log
+        $existingData = $this->motorcycleModel->find($id);
+        if (!$existingData) {
+            session()->setFlashdata('alert', [
+                'type' => 'danger',
+                'message' => 'Data motor tidak ditemukan'
+            ]);
+            return redirect()->to('/master-data/motorcycles');
+        }
+
+        // delete data
+        $deleted = $this->motorcycleModel->delete($id);
+
+        if ($deleted) {
+            // add activity log
+            $logData = [
+                'admin_id' => session()->get('admin_id'),
+                'table_name' => 'motorcycles',
+                'action_type' => 'delete',
+                'old_value' => "{$existingData->brand} {$existingData->model} - {$existingData->license_number}",
+                'new_value' => null,
+            ];
+
+            $this->activityLogModel->saveActivityLog($logData);
+
+            // show success message
+            session()->setFlashdata('alert', [
+                'type' => 'success',
+                'message' => 'Data berhasil dihapus'
+            ]);
+        } else {
+            // show error message
+            session()->setFlashdata('alert', [
+                'type' => 'danger',
+                'message' => 'Data gagal dihapus'
+            ]);
+        }
+
+        return redirect()->to('/master-data/motorcycles');
+    }
+
+    // delete function for AJAX
+    public function deleteAlt()
+    {
+        $response = ['success' => false, 'message' => ''];
+
+        $id = $this->request->getPost('id');
+        if (!$id) {
+            $response['message'] = 'ID motor tidak ditemukan';
+            return $this->response->setJSON($response);
+        }
+
+        // get existing data for activity log
+        $existingData = $this->motorcycleModel->find($id);
+        if (!$existingData) {
+            $response['message'] = 'Data motor tidak ditemukan';
+            return $this->response->setJSON($response);
+        }
+
+        // delete data
+        $deleted = $this->motorcycleModel->delete($id);
+
+        if ($deleted) {
+            // add activity log
+            $logData = [
+                'admin_id' => session()->get('admin_id'),
+                'table_name' => 'motorcycles',
+                'action_type' => 'delete',
+                'old_value' => "{$existingData->brand} {$existingData->model} - {$existingData->license_number}",
+                'new_value' => null,
+            ];
+
+            $this->activityLogModel->saveActivityLog($logData);
+
+            $response['success'] = true;
+        } else {
+            $response['message'] = 'Data gagal dihapus';
         }
 
         return $this->response->setJSON($response);

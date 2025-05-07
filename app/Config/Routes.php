@@ -124,6 +124,8 @@ $routes->group('master-data', ['filter' => 'auth'], function ($routes) {
         $routes->post('add-alt', 'Customers::addAlt');
         $routes->post('edit', 'Customers::edit');
         $routes->post('delete', 'Customers::delete');
+        $routes->get('archived', 'Customers::archived');
+        $routes->get('restore/(:num)', 'Customers::restore/$1');
         // fetch
         $routes->post('fetch', 'Customers::fetch');
     });
@@ -134,6 +136,8 @@ $routes->group('master-data', ['filter' => 'auth'], function ($routes) {
         $routes->post('add', 'Mechanics::add');
         $routes->post('edit', 'Mechanics::edit');
         $routes->post('delete', 'Mechanics::delete');
+        $routes->get('archived', 'Mechanics::archived');
+        $routes->get('restore/(:num)', 'Mechanics::restore/$1');
         // fetch
         $routes->post('fetch', 'Mechanics::fetch');
     });
@@ -153,7 +157,7 @@ $routes->group('master-data', ['filter' => 'auth'], function ($routes) {
         $routes->get('/', 'Motorcycles::index');
         $routes->post('add', 'Motorcycles::add');
         $routes->post('add-alt', 'Motorcycles::addAlt');
-        $routes->post('edit', 'Motorcycles::edit');
+        $routes->post('update', 'Motorcycles::update');
         $routes->post('delete', 'Motorcycles::delete');
         // fetch motorcycles
         $routes->post('fetch', 'Motorcycles::fetchByCustomerId');

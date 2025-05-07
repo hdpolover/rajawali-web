@@ -4,11 +4,11 @@
 <!-- Basic Tables start -->
 <section class="section">
 
-    <div class="row mb-4">
+    <div class="row mb-4"><div class="row mb-4">
         <div class="col-12 text-end">
-            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#archiveModal">
-                <i class="bi bi-archive"></i>
-            </button>
+            <a href="<?= base_url('master-data/mechanics/archived') ?>" class="btn btn-secondary">
+                <i class="bi bi-archive"></i> Arsip
+            </a>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
                 <i class="bi bi-plus"></i> Mekanik Baru
             </button>
@@ -55,9 +55,11 @@
 
 <!-- Basic Tables end -->
 
-<!-- include Spare Part Modal from the other folder-->
+<!-- include mechanic modals -->
 <?= $this->include('pages/mechanic/components/add'); ?>
 <?= $this->include('pages/mechanic/components/view'); ?>
+<?= $this->include('pages/mechanic/components/edit'); ?>
+<?= $this->include('pages/mechanic/components/delete'); ?>
 
 
 <?= $this->endSection(); ?>

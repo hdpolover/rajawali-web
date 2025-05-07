@@ -2,13 +2,11 @@
 
 <?= $this->section('content'); ?>
 <!-- Basic Tables start -->
-<section class="section">
-
-    <div class="row mb-4">
+<section class="section">    <div class="row mb-4">
         <div class="col-12 text-end">
-            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#archiveModal">
-                <i class="bi bi-archive"></i>
-            </button>
+            <a href="<?= base_url('master-data/customers/archived') ?>" class="btn btn-secondary">
+                <i class="bi bi-archive"></i> Arsip
+            </a>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
                 <i class="bi bi-plus"></i> Pelanggan Baru
             </button>
@@ -29,16 +27,15 @@
                     </thead>
                     <tbody>
                         <?php foreach ($customers as $index => $customer) : ?>
-                            <tr>
-                                <td><?= $index + 1 ?></td>
-                                <td><?= $customer->name ?></td>
-                                <td><?= $customer->phone ;?></td>
-                                <td><?= $customer->address ;?></td>
+                            <tr>                                <td><?= $index + 1 ?></td>
+                                <td><?= esc($customer->name) ?></td>
+                                <td><?= esc($customer->phone) ?></td>
+                                <td><?= esc($customer->address) ?></td>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewModal" data-id="<?= $customer->id ?>" data-name="<?= $customer->name ?>" data-phone="<?= $customer->phone ?>" data-address="<?= $customer->address ?>">
+                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewModal" data-id="<?= $customer->id ?>" data-name="<?= esc($customer->name) ?>" data-phone="<?= esc($customer->phone) ?>" data-address="<?= esc($customer->address) ?>">
                                         <i class="bi bi-eye"></i>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" data-id="<?= $customer->id ?>" data-name="<?= $customer->name ?>" data-phone="<?= $customer->phone ?>" data-address="<?= $customer->address ?>">
+                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" data-id="<?= $customer->id ?>" data-name="<?= esc($customer->name) ?>" data-phone="<?= esc($customer->phone) ?>" data-address="<?= esc($customer->address) ?>">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?= $customer->id ?>">
@@ -56,9 +53,11 @@
 
 <!-- Basic Tables end -->
 
-<!-- include Spare Part Modal from the other folder-->
+<!-- include customer modals -->
 <?= $this->include('pages/customer/components/add'); ?>
 <?= $this->include('pages/customer/components/view'); ?>
+<?= $this->include('pages/customer/components/edit'); ?>
+<?= $this->include('pages/customer/components/delete'); ?>
 
 
 <?= $this->endSection(); ?>

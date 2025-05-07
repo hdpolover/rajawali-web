@@ -44,7 +44,7 @@ class MotorcycleModel extends Model
             'required' => 'Nomor plat harus diisi'
         ]
     ];
-
+    
     public function getMotorcycles()
     {
         $builder = $this->db->table('motorcycles');
@@ -57,8 +57,13 @@ class MotorcycleModel extends Model
         foreach ($result as $motorcycle) {
             $customerModel = new CustomerModel();
             $customer = $customerModel->find($motorcycle->customer_id);
-            
+
             // Add customer as a property to the motorcycle object
+            // If customer not found, set a default object with name "-"
+            if (!$customer) {
+                $customer = (object) ['id' => null, 'name' => '-'];
+            }
+
             $motorcycle->customer = $customer;
 
             $motorcycles[] = $motorcycle;

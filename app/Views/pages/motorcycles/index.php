@@ -30,26 +30,21 @@
                     </thead>
                     <tbody>
                         <?php foreach ($motorcycles as $index => $motorcycle) : ?>
-                            <tr>
-                                <td><?= $index + 1 ?></td>
+                            <tr>                                <td><?= $index + 1 ?></td>
                                 <td><?= esc($motorcycle->brand) ?></td>
                                 <td><?= esc($motorcycle->model) ?></td>
                                 <td><?= esc($motorcycle->license_number) ?></td>
-                                <?php foreach ($customers as $customer) : ?>
-                                    <?php if ($customer->id == $motorcycle->customer_id) : ?>
-                                        <td><?= esc($customer->name) ?></td>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
+                                <td><?= esc($motorcycle->customer->name ?? '-') ?></td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewModal" data-id="<?= $motorcycle->id ?>" data-brand="<?= esc($motorcycle->brand) ?>" data-model="<?= esc($motorcycle->model) ?>" data-license_number="<?= esc($motorcycle->license_number) ?>" data-customer_id="<?= esc($motorcycle->customer_id) ?>">
                                         <i class="bi bi-eye"></i>
                                     </button>
                                     <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" data-id="<?= $motorcycle->id ?>" data-brand="<?= esc($motorcycle->brand) ?>" data-model="<?= esc($motorcycle->model) ?>" data-license_number="<?= esc($motorcycle->license_number) ?>" data-customer_id="<?= esc($motorcycle->customer_id) ?>">
                                         <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?= $motorcycle->id ?>">
+                                    </button>                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?= $motorcycle->id ?>">
                                         <i class="bi bi-trash"></i>
                                     </button>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -65,6 +60,8 @@
 <!-- include Spare Part Modal from the other folder-->
 <?= $this->include('pages/motorcycles/components/add'); ?>
 <?= $this->include('pages/motorcycles/components/view'); ?>
+<?= $this->include('pages/motorcycles/components/edit'); ?>
+<?= $this->include('pages/motorcycles/components/delete'); ?>
 
 
 <?= $this->endSection(); ?>

@@ -4,14 +4,17 @@
 namespace App\Controllers;
 
 use App\Models\CustomerModel;
+use App\Models\ActivityLogModel;
 
 class Customers extends BaseController
 {
     protected $customerModel;
+    protected $activityLogModel;
 
     public function __construct()
     {
         $this->customerModel = new CustomerModel();
+        $this->activityLogModel = new ActivityLogModel();
     }
 
     public function index()
@@ -54,9 +57,7 @@ class Customers extends BaseController
         $response['data'] = $data;
 
         return $this->response->setJSON($response);
-    }
-
-    // add function
+    }    // add function
     public function add()
     {
         // get form data
@@ -67,8 +68,14 @@ class Customers extends BaseController
         ];
 
         // validate form data
-        if (!$this->validate($this->customerModel->getValidationRules())) {
-            return redirect()->to('/master-data/customers')->withInput()->with('errors', $this->validator->getErrors());
+        $validation = \Config\Services::validation();
+        
+        // Set validation rules
+        $validation->setRules($this->customerModel->getValidationRules());
+        
+        // Validate
+        if (!$validation->run($formData)) {
+            return redirect()->to('/master-data/customers')->withInput()->with('errors', $validation->getErrors());
         }
 
         // insert data
@@ -101,9 +108,7 @@ class Customers extends BaseController
         }
 
         return redirect()->to('/master-data/customers');
-    }
-
-    // add function
+    }    // add function
     public function addAlt()
     {
         $response = ['success' => false, 'message' => ''];
@@ -117,8 +122,14 @@ class Customers extends BaseController
             ];
 
             // Validate form data
-            if (!$this->validate($this->customerModel->getValidationRules())) {
-                $response['message'] = implode(', ', $this->validator->getErrors());
+            $validation = \Config\Services::validation();
+            
+            // Set validation rules
+            $validation->setRules($this->customerModel->getValidationRules());
+            
+            // Validate
+            if (!$validation->run($formData)) {
+                $response['message'] = implode(', ', $validation->getErrors());
                 return $this->response->setJSON($response);
             }
 
@@ -147,26 +158,31 @@ class Customers extends BaseController
         }
 
         return $this->response->setJSON($response);
-    }
-
-    // edit function
+    }    // edit function
     public function edit()
     {
         // get form data
+        $id = $this->request->getPost('id');
         $formData = [
-            'id'     => $this->request->getPost('id'),
+            'id'     => $id,
             'name'   => $this->request->getPost('name'),
             'phone'  => $this->request->getPost('phone'),
             'address' => $this->request->getPost('address')
         ];
 
         // validate form data
-        if (!$this->validate($this->customerModel->getValidationRules())) {
-            return redirect()->to('/customers')->withInput()->with('errors', $this->validator->getErrors());
+        $validation = \Config\Services::validation();
+        
+        // Set validation rules
+        $validation->setRules($this->customerModel->getValidationRules());
+        
+        // Validate
+        if (!$validation->run($formData)) {
+            return redirect()->to('/master-data/customers')->withInput()->with('errors', $validation->getErrors());
         }
 
         // get the old data
-        $oldData = $this->customerModel->find($formData['id']);
+        $oldData = $this->customerModel->find($id);
 
         // update data
         $updatedData = $this->customerModel->save($formData);
@@ -178,14 +194,12 @@ class Customers extends BaseController
                 'table_name' => 'customers',
                 'action_type' => 'edit',
                 // get the old value name from the old data
-                'old_value' => $oldData['name'],
+                'old_value' => $oldData->name,
                 // get the new value name from the saved data
                 'new_value' => $formData['name'],
             ];
 
-            $this->activityLogModel->saveActivityLog($logData);
-
-            // show success message and redirect to the previous page. set alert session data
+            $this->activityLogModel->saveActivityLog($logData);            // show success message and redirect to the previous page. set alert session data
             session()->setFlashdata('alert', [
                 'type' => 'success',
                 'message' => 'Data pelanggan berhasil diubah'
@@ -199,19 +213,24 @@ class Customers extends BaseController
         }
 
         return redirect()->to('/master-data/customers');
-    }
-
-    // delete function
+    }    // delete function
     public function delete()
     {
         // get customer id from form data
-        $customerId = $this->request->getPost('id');
+        $id = $this->request->getPost('id');
 
-        // get the old data
-        $oldData = $this->customerModel->find($customerId);
+        // Validate that the ID exists
+        $customer = $this->customerModel->find($id);
+        if (!$customer) {
+            session()->setFlashdata('alert', [
+                'type' => 'danger',
+                'message' => 'Data pelanggan tidak ditemukan.'
+            ]);
+            return redirect()->to('/master-data/customers');
+        }
 
         // delete data
-        $deletedData = $this->customerModel->delete($customerId);
+        $deletedData = $this->customerModel->delete($id);
 
         if ($deletedData) {
             // add activity log
@@ -220,7 +239,7 @@ class Customers extends BaseController
                 'table_name' => 'customers',
                 'action_type' => 'delete',
                 // get the old value name from the old data
-                'old_value' => $oldData['name'],
+                'old_value' => $customer->name,
                 'new_value' => null,
             ];
 
@@ -239,6 +258,51 @@ class Customers extends BaseController
             ]);
         }
 
+        return redirect()->to('/master-data/customers');
+    }    // archive methods
+    public function archived()
+    {
+        $data = [
+            'title'     => 'Data Pelanggan Diarsipkan',
+            'customers' => $this->customerModel->onlyDeleted()->findAll(),
+        ];
+
+        return $this->render('pages/customer/archived', $data);
+    }
+
+    // restore method
+    public function restore($id)
+    {
+        // Get customer data
+        $customer = $this->customerModel->onlyDeleted()->find($id);
+        
+        if (!$customer) {
+            session()->setFlashdata('alert', [
+                'type' => 'danger',
+                'message' => 'Data pelanggan tidak ditemukan.'
+            ]);
+            return redirect()->to('/master-data/customers');
+        }
+
+        // Restore customer (remove the deletion mark)
+        $this->customerModel->update($id, ['deleted_at' => null]);
+        
+        // Add activity log
+        $logData = [
+            'admin_id' => session()->get('admin_id'),
+            'table_name' => 'customers',
+            'action_type' => 'edit',
+            'old_value' => 'Diarsipkan: ' . $customer->name,
+            'new_value' => 'Dipulihkan: ' . $customer->name,
+        ];
+
+        $this->activityLogModel->saveActivityLog($logData);
+        
+        session()->setFlashdata('alert', [
+            'type' => 'success',
+            'message' => 'Data pelanggan berhasil dipulihkan.'
+        ]);
+        
         return redirect()->to('/master-data/customers');
     }
 }
