@@ -23,8 +23,8 @@ class CustomerModel extends Model
     protected $updatedField = 'updated_at';
     protected $deletedField = 'deleted_at';
     protected $useSoftDeletes = true;    protected $validationRules = [
-        'name' => 'required|min_length[3]|max_length[100]',
-        'phone' => 'required|numeric|min_length[10]|max_length[15]',
+        'name' => 'required|min_length[2]|max_length[100]',
+        'phone' => 'permit_empty|max_length[15]',
         'address' => 'permit_empty|max_length[255]'
     ];
 

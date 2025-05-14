@@ -5,17 +5,21 @@ namespace App\Controllers;
 
 use App\Models\MotorcycleModel;
 use App\Models\CustomerModel;
+use App\Models\ActivityLogModel;
 
 class Motorcycles extends BaseController
 {
     protected $motorcycleModel;
     protected $customerModel;
+    protected $activityLogModel;
 
     public function __construct()
     {
         $this->motorcycleModel = new MotorcycleModel();
         $this->customerModel = new CustomerModel();
-    }    public function index()
+        $this->activityLogModel = new ActivityLogModel();
+    }
+    public function index()
     {
         $data = [
             'title'       => 'Data Motor Pelanggan',
@@ -72,12 +76,13 @@ class Motorcycles extends BaseController
         }
 
         return redirect()->to('/master-data/motorcycles');
-    }
-
-    // add function
+    }    // add function
     public function addAlt()
     {
         $response = ['success' => false, 'message' => ''];
+
+        // Log raw POST data for debugging
+        log_message('debug', 'Motorcycle addAlt POST data: ' . json_encode($this->request->getPost()));
 
         // get form data
         $formData = [
@@ -86,28 +91,48 @@ class Motorcycles extends BaseController
             'customer_id' => $this->request->getPost('customer_id'),
             'license_number' => $this->request->getPost('license_number')
         ];
-
         // validate form data
         if (!$this->validate($this->motorcycleModel->getValidationRules())) {
-            $response['message'] = $this->validator->getErrors();
+            $response['message'] = implode(', ', $this->validator->getErrors());
             return $this->response->setJSON($response);
         }
-
         // insert data
         $savedData = $this->motorcycleModel->save($formData);
 
         if ($savedData) {
+            // Get the newly inserted motorcycle data
+            $newMotorcycle = $this->motorcycleModel->find($this->motorcycleModel->getInsertID());
+
+            // add activity log
+            $logData = [
+                'admin_id' => session()->get('admin_id'),
+                'table_name' => 'motorcycles',
+                'action_type' => 'add',
+                'old_value' => null,
+                'new_value' => $newMotorcycle->brand . ' ' . $newMotorcycle->model,
+            ];
+
+            $this->activityLogModel->saveActivityLog($logData);
+
             $response['success'] = true;
-            $response['data'] = $this->motorcycleModel->find($this->motorcycleModel->insertID);
+            $response['message'] = 'Berhasil menyimpan data motor';
+            $response['data'] = [
+                'id' => (int)$newMotorcycle->id,
+                'brand' => $newMotorcycle->brand,
+                'model' => $newMotorcycle->model,
+                'license_number' => $newMotorcycle->license_number,
+                'customer_id' => $newMotorcycle->customer_id
+            ];
         } else {
-            $response['message'] = 'Data gagal ditambahkan';
-        }        return $this->response->setJSON($response);
+            $response['message'] = 'Gagal menyimpan data motor';
+        }
+        return $this->response->setJSON($response);
     }
-      // update function
+    // update function
     public function update()
     {
         $id = $this->request->getPost('id');
-        
+
         if (!$id) {
             session()->setFlashdata('alert', [
                 'type' => 'danger',
@@ -223,13 +248,14 @@ class Motorcycles extends BaseController
             $response['data'] = $this->motorcycleModel->find($id);
         } else {
             $response['message'] = 'Data gagal diperbarui';
-        }        return $this->response->setJSON($response);
+        }
+        return $this->response->setJSON($response);
     }
-      // delete function
+    // delete function
     public function delete()
     {
         $id = $this->request->getPost('id');
-        
+
         if (!$id) {
             session()->setFlashdata('alert', [
                 'type' => 'danger',

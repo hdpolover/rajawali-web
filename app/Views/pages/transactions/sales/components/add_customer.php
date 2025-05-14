@@ -18,12 +18,11 @@
                     </div>
                     <div class="mb-3">
                         <label for="add_address" class="form-label">Alamat</label>
-                        <textarea class="form-control" id="add_address" name="address" rows="3"></textarea>
-                    </div>
+                        <textarea class="form-control" id="add_address" name="address" rows="3"></textarea>                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <button type="submit" class="btn btn-primary" id="saveCustomerBtn">Simpan</button>
                 </div>
             </form>
         </div>
@@ -31,59 +30,90 @@
 </div>
 
 <script>
-    $(document).ready(function() {
-        // Handle the form submission
-        $('#addCustomerForm').on('submit', function(e) {
-            e.preventDefault();
-
-            $.ajax({
-                url: '<?= site_url('customers/add-alt') ?>',
-                type: 'POST',
-                data: $(this).serialize(),
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        // Show success message
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Berhasil menambahkan data pelanggan'
-                        }).then((result) => {
-                            // Close modal and reset form
-                            $('#addCustomerModal').modal('hide');
-                            $('#addCustomerForm')[0].reset();
-
-                            // select the customer
-                            $('#select_customer').append(`<option value="${response.data.id}">${response.data.name}</option>`);
-                            $('#select_customer').val(response.data.id).trigger('change');
-
-                            // Reload the page or update customer list
-                             window.location.reload();
-                        });
-                    } else {
-                        // Show error message
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message || 'Galat saat menyimpan data'
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Galat saat menyimpan data'
-                    });
-                }
-            });
-        });
-
+    $(document).ready(function() {        
+        // Reset form fields when modal is closed
         $('#addCustomerModal').on('hidden.bs.modal', function() {
             $('#add_name').val('');
             $('#add_phone').val('');
             $('#add_address').val('');
         });
+        
+        // Direct submit button handler - for debugging
+        $('#saveCustomerBtn').on('click', function(e) {
+            e.preventDefault();
+            console.log('Save customer button clicked directly');
+            
+            // Validate form before submitting
+            const name = $('#add_name').val();
+            if (!name || name.trim() === '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Nama pelanggan tidak boleh kosong'
+                });
+                return;
+            }
+            
+            // We need to do this manually since we've removed the form's action/method
+            const formData = new FormData();
+            formData.append('name', $('#add_name').val());
+            formData.append('phone', $('#add_phone').val());
+            formData.append('address', $('#add_address').val());
+            
+            $.ajax({
+                url: '<?= site_url('master-data/customers/add-alt') ?>',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    console.log('Customer form direct submission response:', response);
+                    if (response.success) {
+                        // Close the modal
+                        $('#addCustomerModal').modal('hide');
+                        
+                        // Create a new option for the select
+                        const newCustomer = {
+                            id: response.data.id,
+                            text: response.data.name
+                        };
+                        
+                        // Add the new customer to the select and select it
+                        if (!$('#select_customer').find("option[value='" + newCustomer.id + "']").length) {
+                            const newOption = new Option(newCustomer.text, newCustomer.id, true, true);
+                            $('#select_customer').append(newOption).trigger('change');
+                        }
+                        
+                        // Show motorcycle div
+                        document.getElementById('motorcycle_div').classList.remove('d-none');
+                        
+                        // Reset the form
+                        $('#addCustomerForm')[0].reset();
+                        
+                        // Display success message
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: 'Pelanggan berhasil ditambahkan'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Gagal menambahkan pelanggan'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr, status, error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Terjadi kesalahan saat menyimpan data pelanggan'
+                    });
+                }
+            });
+        });
     });
 </script>
+        

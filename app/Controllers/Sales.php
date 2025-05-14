@@ -74,9 +74,7 @@ class Sales extends BaseController
 
 
         return $this->render('pages/transactions/sales/index', $data);
-    }
-
-    // save sale data
+    }    // save sale data
     public function save()
     {
         $postData = $this->request->getPost();
@@ -115,11 +113,13 @@ class Sales extends BaseController
             
             if (!$saved) {
                 $errors = $this->saleModel->errors();
-                session()->setFlashdata('alert', [
-                    'type' => 'error',
-                    'message' => 'Error: ' . implode(', ', $errors)
+                $errorMessage = is_array($errors) ? implode(', ', $errors) : 'Gagal menyimpan data penjualan';
+                
+                // Return JSON response for AJAX
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Error: ' . $errorMessage
                 ]);
-                return redirect()->back()->withInput();
             }
             
             // get the last inserted sale id
@@ -221,12 +221,6 @@ class Sales extends BaseController
                 }
             }
 
-            // show success message and redirect to the previous page. set alert session data
-            session()->setFlashdata('alert', [
-                'type' => 'success',
-                'message' => 'Data penjualan berhasil ditambahkan',
-            ]);
-
             // add activity log
             $logData = [
                 'admin_id' => session()->get('admin_id'),
@@ -238,13 +232,20 @@ class Sales extends BaseController
 
             $this->activityLogModel->saveActivityLog($logData);
 
-            return redirect()->to('/transactions/sales');
+            // Return JSON response for AJAX
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Data penjualan berhasil ditambahkan',
+                'sale_id' => $saleId
+            ]);
         } catch (\Exception $e) {
-            session()->setFlashdata('alert', [
-                'type' => 'error',
+            log_message('error', 'Sale creation error: ' . $e->getMessage());
+            
+            // Return JSON response for AJAX
+            return $this->response->setJSON([
+                'status' => 'error',
                 'message' => 'Error: ' . $e->getMessage()
             ]);
-            return redirect()->back()->withInput();
         }
     }
 
