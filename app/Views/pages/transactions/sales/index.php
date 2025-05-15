@@ -61,6 +61,32 @@
         font-weight: 500;
         letter-spacing: 0.3px;
     }
+
+    /* WhatsApp button styling */
+    .btn-outline-success.whatsapp-btn:hover {
+        background-color: #25D366;
+        border-color: #25D366;
+        color: white;
+    }
+
+    /* Animation for the WhatsApp button */
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .whatsapp-btn:hover i {
+        animation: pulse 1s infinite;
+    }
 </style>
 
 <div class="page-content">
@@ -177,7 +203,7 @@
     </div>
 
     <div class="card shadow-sm">
-        
+
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover table-striped" id="salesTable">
@@ -238,11 +264,20 @@
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?= $sale->id ?>" title="Hapus">
                                             <i class="bi bi-trash"></i>
-                                        </button>
-                                        <?php if ($sale->status == 'completed'): ?>
-                                            <a href="<?= base_url("/transactions/sales/print_invoice/" . $sale->id) ?>" class="btn btn-sm btn-outline-info" title="Cetak Faktur">
+                                        </button> <?php if ($sale->status == 'completed'): ?>
+                                            <a href="<?= base_url("/transactions/sales/print_invoice/" . $sale->id) ?>" class="btn btn-sm btn-outline-info" title="Cetak Struk" target="_blank">
                                                 <i class="bi bi-printer"></i>
                                             </a>
+                                            <?php if (!empty($sale->customer) && !empty($sale->customer->phone)): ?>
+                                                <button type="button" class="btn btn-sm btn-outline-success whatsapp-btn"
+                                                    data-sale-id="<?= $sale->id ?>"
+                                                    data-customer-name="<?= !empty($sale->customer->name) ? $sale->customer->name : 'Pelanggan' ?>"
+                                                    data-customer-phone="<?= $sale->customer->phone ?>"
+                                                    data-invoice-number="<?= $sale->sale_number ?>"
+                                                    title="Kirim via WhatsApp">
+                                                    <i class="bi bi-whatsapp"></i>
+                                                </button>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -260,6 +295,7 @@
 <?= $this->include('pages/transactions/sales/components/edit'); ?>
 <?= $this->include('pages/transactions/sales/components/delete'); ?>
 <?= $this->include('pages/transactions/sales/components/archive'); ?>
+<?= $this->include('pages/transactions/sales/components/whatsapp'); ?>
 
 <!-- DataTable Initialization Script -->
 <script>
@@ -287,6 +323,102 @@
                     "next": "Selanjutnya",
                     "previous": "Sebelumnya"
                 },
+            }
+        });
+        // Add print invoice loading indicator
+        $('a.btn-outline-info[title="Cetak Struk"]').on('click', function(e) {
+            e.preventDefault();
+            const href = $(this).attr('href');
+
+            // Show loading indicator
+            Swal.fire({
+                title: 'Memproses...',
+                text: 'Sedang membuat struk, mohon tunggu...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+
+                    // Open in new tab after a short delay
+                    setTimeout(() => {
+                        window.open(href, '_blank');
+                        Swal.close();
+                    }, 1000);
+                }
+            });
+
+            return false;
+        });
+
+        // WhatsApp button click handler
+        $('.whatsapp-btn').on('click', function() {
+            const saleId = $(this).data('sale-id');
+            const customerName = $(this).data('customer-name');
+            const customerPhone = $(this).data('customer-phone');
+            const invoiceNumber = $(this).data('invoice-number');
+
+            // Format phone number (remove leading zero if present)
+            let formattedPhone = customerPhone;
+            if (formattedPhone.startsWith('0')) {
+                formattedPhone = formattedPhone.substring(1);
+            }            // Set form values
+            $('#whatsapp_sale_id').val(saleId);
+            $('#whatsapp_invoice_number').val(invoiceNumber);
+            $('#whatsapp_customer_name').val(customerName);
+            $('#whatsapp_customer_phone').val(customerPhone);
+            $('#whatsapp_phone').val(formattedPhone);
+
+            // Replace placeholders in message template
+            let messageTemplate = $('#whatsapp_message').val();
+            messageTemplate = messageTemplate.replace(/{customer_name}/g, customerName);
+            messageTemplate = messageTemplate.replace(/{invoice_number}/g, invoiceNumber);
+            $('#whatsapp_message').val(messageTemplate);
+
+            // Show the WhatsApp modal
+            $('#whatsappModal').modal('show');
+        });        // Send WhatsApp message button handler
+        $('#sendWhatsappBtn').on('click', function() {
+            const saleId = $('#whatsapp_sale_id').val();
+            const phone = $('#whatsapp_phone').val();
+            const message = encodeURIComponent($('#whatsapp_message').val());
+            const shouldDownloadInvoice = $('#attachInvoice').is(':checked');
+            // Get invoice number from hidden field
+            const invoiceNumber = $('#whatsapp_invoice_number').val();
+
+            // Show loading indicator before PDF generation
+            if (shouldDownloadInvoice) {
+                Swal.fire({
+                    title: 'Memproses...',
+                    text: 'Sedang mengunduh struk, mohon tunggu...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+
+            // WhatsApp API URL
+            const whatsappUrl = `https://wa.me/62${phone}?text=${message}`; // If download invoice is checked, first download the invoice
+            if (shouldDownloadInvoice) {
+                // Create a hidden anchor to specifically download the file (not open in tab)
+                const downloadLink = document.createElement('a');
+                downloadLink.href = `<?= base_url('/transactions/sales/print_invoice/') ?>${saleId}`;
+                downloadLink.setAttribute('download', `invoice_${invoiceNumber}.pdf`);
+                downloadLink.style.display = 'none';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                // Clean up the download link after a short delay
+                setTimeout(function() {
+                    document.body.removeChild(downloadLink);
+                    Swal.close(); // Close loading indicator
+                }, 1000);                // Wait a moment to ensure the download starts, then open WhatsApp
+                setTimeout(function() {
+                    window.open(whatsappUrl, '_blank');
+                    $('#whatsappModal').modal('hide');
+                }, 1500);
+            } else {
+                // Just open WhatsApp without downloading invoice
+                window.open(whatsappUrl, '_blank');
+                $('#whatsappModal').modal('hide');
             }
         });
     });

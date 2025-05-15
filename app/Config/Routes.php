@@ -148,6 +148,8 @@ $routes->group('master-data', ['filter' => 'auth'], function ($routes) {
         $routes->post('add', 'Services::add');
         $routes->post('edit', 'Services::edit');
         $routes->post('delete', 'Services::delete');
+        $routes->get('archived', 'Services::archived');
+        $routes->get('restore/(:num)', 'Services::restore/$1');
         // fetch
         $routes->post('fetch', 'Services::fetch');
     });

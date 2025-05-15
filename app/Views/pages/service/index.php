@@ -64,6 +64,8 @@
 <?= $this->include('pages/service/components/add'); ?>
 <?= $this->include('pages/service/components/view'); ?>
 <?= $this->include('pages/service/components/edit'); ?>
+<?= $this->include('pages/service/components/delete'); ?>
+<?= $this->include('pages/service/components/archive'); ?>
 
 <script>
    document.addEventListener('DOMContentLoaded', function() {

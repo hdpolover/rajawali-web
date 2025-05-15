@@ -744,12 +744,11 @@ class Sales extends BaseController
         
         // Load TCPDF library
         $pdf = new \TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-        
-        // Set document information
+          // Set document information
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('Rajawali Motor');
-        $pdf->SetTitle('Invoice #' . $sale->sale_number);
-        $pdf->SetSubject('Invoice Penjualan');
+        $pdf->SetTitle('Receipt #' . $sale->sale_number);
+        $pdf->SetSubject('Receipt Penjualan');
         
         // Remove header and footer
         $pdf->setPrintHeader(false);
@@ -775,17 +774,17 @@ class Sales extends BaseController
         
         // Get HTML content for PDF
         $data = [
-            'sale' => $sale
+            'sale' => $sale,
+            'logoBase64' => $this->getLogoBase64()
         ];
         
         // Capture the view output
         $html = view('pages/transactions/sales/pdf_invoice', $data);
-        
-        // Write HTML content to the PDF
+          // Write HTML content to the PDF
         $pdf->writeHTML($html, true, false, true, false, '');
         
         // Close and output PDF document
-        $pdf->Output('invoice_' . $sale->sale_number . '.pdf', 'D');
+        $pdf->Output('receipt_' . $sale->sale_number . '.pdf', 'D');
         exit();
     }
     
@@ -847,5 +846,21 @@ class Sales extends BaseController
         ]);
         
         return redirect()->to('/transactions/sales/archived');
+    }
+    
+    /**
+     * Get logo as base64 encoded string for embedding in PDF
+     */
+    private function getLogoBase64()
+    {
+        $logoPath = FCPATH . 'images/logo_rajawali.png';
+        
+        if (file_exists($logoPath)) {
+            $imageData = file_get_contents($logoPath);
+            return 'data:image/png;base64,' . base64_encode($imageData);
+        }
+        
+        // Return empty string if logo not found
+        return '';
     }
 }
